@@ -10,19 +10,16 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [adminSubTab, setAdminSubTab] = useState('assign'); // assign, reports, crew
+  const [adminSubTab, setAdminSubTab] = useState('assign');
   const [loginError, setLoginError] = useState('');
   
-  // Formularze
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Kierowca
   const [myShift, setMyShift] = useState(null);
   const [driverReportFile, setDriverReportFile] = useState(null);
   const [isUploaded, setIsUploaded] = useState(false);
 
-  // Admin - Dyspozycje
   const [assignDriverId, setAssignDriverId] = useState('');
   const [assignLine, setAssignLine] = useState('');
   const [assignBrigade, setAssignBrigade] = useState('');
@@ -32,17 +29,15 @@ export default function App() {
   const [assignPdf, setAssignPdf] = useState(null);
   const [assignSuccess, setAssignSuccess] = useState(false);
   
-  // Admin - Inne
   const [pendingReports, setPendingReports] = useState([]);
   const [driversList, setDriversList] = useState([]);
+  const [activeShifts, setActiveShifts] = useState([]);
   
-  // Admin - Dodawanie pracownika
   const [newDriverLogin, setNewDriverLogin] = useState('');
   const [newDriverPass, setNewDriverPass] = useState('');
   const [newDriverName, setNewDriverName] = useState('');
   const [newDriverSuccess, setNewDriverSuccess] = useState(false);
 
-  // --- EFEKTY POBIERAJĄCE DANE ---
   useEffect(() => {
     if (!isLoggedIn || !user) return;
 
@@ -55,6 +50,7 @@ export default function App() {
 
     if (user.role === 'admin') {
       fetchDrivers();
+      fetchActiveShifts();
       if (adminSubTab === 'reports') fetchReports();
     }
   }, [isLoggedIn, user, adminSubTab]);
@@ -73,7 +69,21 @@ export default function App() {
       .catch(err => console.error(err));
   };
 
-  // --- LOGOWANIE DO SERWERA ---
+  const fetchActiveShifts = () => {
+    fetch(`${API_URL}/api/shifts`)
+      .then(res => res.json())
+      .then(data => setActiveShifts(data.shifts || []))
+      .catch(err => console.error(err));
+  };
+
+  const handleCancelShift = async (driverId) => {
+    if (!confirm('Anulować tę służbę?')) return;
+    try {
+      await fetch(`${API_URL}/api/shifts/${driverId}`, { method: 'DELETE' });
+      fetchActiveShifts();
+    } catch (err) { console.error(err); }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
@@ -108,7 +118,6 @@ export default function App() {
     setIsUploaded(false); setEmail(''); setPassword(''); setMyShift(null);
   };
 
-  // --- KIEROWCA: WYSYŁANIE RAPORTU ---
   const submitDriverReport = async () => {
     if (!driverReportFile || !myShift) return;
 
@@ -124,7 +133,6 @@ export default function App() {
     } catch (err) { console.error(err); }
   };
 
-  // --- ADMIN: DODAWANIE PRACOWNIKA ---
   const handleAddDriver = async (e) => {
     e.preventDefault();
     try {
@@ -141,7 +149,7 @@ export default function App() {
       if (data.success) {
         setNewDriverSuccess(true);
         setNewDriverLogin(''); setNewDriverPass(''); setNewDriverName('');
-        fetchDrivers(); // Odśwież listę pracowników
+        fetchDrivers();
         setTimeout(() => setNewDriverSuccess(false), 3000);
       } else {
         alert(data.message);
@@ -149,7 +157,6 @@ export default function App() {
     } catch (error) { console.error(error); }
   };
 
-  // --- ADMIN: WYSTAWIANIE SŁUŻBY ---
   const handleAssignShift = async (e) => {
     e.preventDefault();
     if (!assignPdf || !assignDriverId) { alert("Wybierz kierowcę i załącz PDF!"); return; }
@@ -170,6 +177,7 @@ export default function App() {
       const response = await fetch(`${API_URL}/api/shifts`, { method: 'POST', body: formData });
       if (response.ok) {
         setAssignSuccess(true);
+        fetchActiveShifts();
         setTimeout(() => {
           setAssignSuccess(false);
           setAssignDriverId(''); setAssignLine(''); setAssignBrigade('');
@@ -179,7 +187,6 @@ export default function App() {
     } catch (err) { console.error(err); }
   };
 
-  // --- ADMIN: ZATWIERDZENIE RAPORTU ---
   const handleReportAction = async (id, action) => {
     try {
       const response = await fetch(`${API_URL}/api/reports/${id}/status`, {
@@ -190,10 +197,6 @@ export default function App() {
       if (response.ok) fetchReports();
     } catch (err) { console.error(err); }
   };
-
-  // ========================================================
-  // WIDOKI UI
-  // ========================================================
 
   if (!isLoggedIn) {
     return (
@@ -228,7 +231,6 @@ export default function App() {
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex justify-center p-4 sm:p-8">
       <div className="w-full max-w-4xl flex flex-col gap-6">
         
-        {/* NAGŁÓWEK */}
         <header className="flex items-center justify-between bg-zinc-900/40 border border-zinc-800/60 p-4 rounded-2xl backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 bg-zinc-800 rounded-full flex items-center justify-center font-medium text-emerald-400 border border-zinc-700">{user.avatar}</div>
@@ -251,7 +253,6 @@ export default function App() {
         </header>
 
         <main className="flex-1 space-y-6">
-          {/* --- WIDOKI KIEROWCY --- */}
           {user.role === 'driver' && activeTab === 'dashboard' && (
             <div className="animate-in fade-in duration-500">
               <h2 className="text-xl font-medium mb-4 text-zinc-200">Bieżąca dyspozycja</h2>
@@ -308,20 +309,16 @@ export default function App() {
             </div>
           )}
 
-          {/* --- WIDOKI ADMINA --- */}
           {user.role === 'admin' && (
             <div className="space-y-6 animate-in fade-in duration-500">
-              {/* NOWE MENU ADMINA */}
               <div className="flex gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-fit overflow-x-auto">
                 <button onClick={() => setAdminSubTab('assign')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'assign' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Plus className="w-4 h-4" /> Wystaw Służbę</button>
                 <button onClick={() => setAdminSubTab('reports')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'reports' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><FileCheck className="w-4 h-4" /> Raporty</button>
                 <button onClick={() => setAdminSubTab('crew')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'crew' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Users className="w-4 h-4" /> Załoga</button>
               </div>
 
-              {/* ADMIN: ZARZĄDZANIE KIEROWCAMI (NOWE) */}
               {adminSubTab === 'crew' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Formularz dodawania */}
                   <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 h-fit">
                     <h2 className="text-xl font-medium text-zinc-200 mb-4 flex items-center gap-2"><UserPlus className="w-5 h-5 text-emerald-400" /> Dodaj kierowcę</h2>
                     {newDriverSuccess ? (
@@ -345,7 +342,6 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* Lista kierowców */}
                   <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8">
                     <h2 className="text-xl font-medium text-zinc-200 mb-4">Zatrudnieni</h2>
                     <div className="space-y-2">
@@ -367,7 +363,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* ADMIN: KREATOR SŁUŻBY (zaktualizowany dropdown) */}
               {adminSubTab === 'assign' && (
                 <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8">
                   <h2 className="text-xl font-medium text-zinc-200 mb-6">Kreator dyspozycji</h2>
@@ -411,10 +406,31 @@ export default function App() {
                       <div className="pt-4 border-t border-zinc-800/80"><button type="submit" disabled={driversList.length === 0} className="px-8 py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm flex items-center gap-2 disabled:bg-zinc-800 disabled:text-zinc-600"><Plus className="w-4 h-4" /> Wyślij dyspozycję</button></div>
                     </form>
                   )}
+
+                  {/* AKTYWNE SŁUŻBY */}
+                  <div className="mt-8 border-t border-zinc-800 pt-6">
+                    <h3 className="text-sm font-medium text-zinc-400 mb-3">Aktywne służby</h3>
+                    {activeShifts.length === 0 ? (
+                      <p className="text-xs text-zinc-600">Brak aktywnych służb.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {activeShifts.map(s => (
+                          <div key={s.id} className="flex items-center justify-between p-3 bg-zinc-950 border border-zinc-800 rounded-xl">
+                            <div>
+                              <p className="text-sm font-medium text-zinc-200">{s.driverName}</p>
+                              <p className="text-xs text-zinc-500">Linia {s.line} | Brygada {s.brigade} | {s.startTime}–{s.endTime}</p>
+                            </div>
+                            <button onClick={() => handleCancelShift(s.driverId)} className="p-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20">
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
-              {/* ADMIN: LISTA RAPORTÓW (bez zmian) */}
               {adminSubTab === 'reports' && (
                 <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
                   <div className="p-6 border-b border-zinc-800/80"><h2 className="text-xl font-medium text-zinc-200">Karty drogowe do weryfikacji</h2></div>
