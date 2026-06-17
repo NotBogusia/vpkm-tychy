@@ -6,6 +6,18 @@ import {
 
 const API_URL = 'https://vpkm-backend-production.up.railway.app';
 
+// Helper: wysyła zapytanie z tokenem JWT w nagłówku
+const authFetch = (url, options = {}) => {
+  const token = localStorage.getItem('vpkm_token');
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    }
+  });
+};
+
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
@@ -42,7 +54,7 @@ export default function App() {
     if (!isLoggedIn || !user) return;
 
     if (user.role === 'driver') {
-      fetch(`${API_URL}/api/shifts/${user.id}`)
+      authFetch(`${API_URL}/api/shifts/${user.id}`)
         .then(res => res.json())
         .then(data => setMyShift(data.shift || null))
         .catch(err => console.error(err));
@@ -56,21 +68,21 @@ export default function App() {
   }, [isLoggedIn, user, adminSubTab]);
 
   const fetchReports = () => {
-    fetch(`${API_URL}/api/reports/pending`)
+    authFetch(`${API_URL}/api/reports/pending`)
       .then(res => res.json())
       .then(data => setPendingReports(data.reports))
       .catch(err => console.error(err));
   };
 
   const fetchDrivers = () => {
-    fetch(`${API_URL}/api/drivers`)
+    authFetch(`${API_URL}/api/drivers`)
       .then(res => res.json())
       .then(data => setDriversList(data))
       .catch(err => console.error(err));
   };
 
   const fetchActiveShifts = () => {
-    fetch(`${API_URL}/api/shifts`)
+    authFetch(`${API_URL}/api/shifts`)
       .then(res => res.json())
       .then(data => setActiveShifts(data.shifts || []))
       .catch(err => console.error(err));
@@ -79,7 +91,7 @@ export default function App() {
   const handleCancelShift = async (driverId) => {
     if (!confirm('Anulować tę służbę?')) return;
     try {
-      await fetch(`${API_URL}/api/shifts/${driverId}`, { method: 'DELETE' });
+      await authFetch(`${API_URL}/api/shifts/${driverId}`, { method: 'DELETE' });
       fetchActiveShifts();
     } catch (err) { console.error(err); }
   };
@@ -97,6 +109,8 @@ export default function App() {
       const data = await res.json();
 
       if (data.success) {
+        // Zapisujemy token w localStorage
+        localStorage.setItem('vpkm_token', data.token);
         setUser({
           id: data.user.id,
           name: data.user.displayName,
@@ -114,6 +128,8 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    // Usuwamy token przy wylogowaniu
+    localStorage.removeItem('vpkm_token');
     setIsLoggedIn(false); setUser(null); setDriverReportFile(null); 
     setIsUploaded(false); setEmail(''); setPassword(''); setMyShift(null);
   };
@@ -128,7 +144,7 @@ export default function App() {
     formData.append('line', myShift.line);
 
     try {
-      const res = await fetch(`${API_URL}/api/reports`, { method: 'POST', body: formData });
+      const res = await authFetch(`${API_URL}/api/reports`, { method: 'POST', body: formData });
       if (res.ok) setIsUploaded(true);
     } catch (err) { console.error(err); }
   };
@@ -136,7 +152,7 @@ export default function App() {
   const handleAddDriver = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${API_URL}/api/drivers`, {
+      const res = await authFetch(`${API_URL}/api/drivers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -174,7 +190,7 @@ export default function App() {
     formData.append('endTime', assignEnd);
 
     try {
-      const response = await fetch(`${API_URL}/api/shifts`, { method: 'POST', body: formData });
+      const response = await authFetch(`${API_URL}/api/shifts`, { method: 'POST', body: formData });
       if (response.ok) {
         setAssignSuccess(true);
         fetchActiveShifts();
@@ -189,7 +205,7 @@ export default function App() {
 
   const handleReportAction = async (id, action) => {
     try {
-      const response = await fetch(`${API_URL}/api/reports/${id}/status`, {
+      const response = await authFetch(`${API_URL}/api/reports/${id}/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action })
@@ -407,7 +423,6 @@ export default function App() {
                     </form>
                   )}
 
-                  {/* AKTYWNE SŁUŻBY */}
                   <div className="mt-8 border-t border-zinc-800 pt-6">
                     <h3 className="text-sm font-medium text-zinc-400 mb-3">Aktywne służby</h3>
                     {activeShifts.length === 0 ? (
