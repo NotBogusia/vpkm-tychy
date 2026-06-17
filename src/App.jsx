@@ -4,7 +4,7 @@ import {
   FileText, CheckCircle, Plus, FileCheck, XCircle, FileUp, Users, UserPlus, ShieldAlert
 } from 'lucide-react';
 
-const API_URL = 'http://localhost:3001';
+const API_URL = 'https://vpkm-backend-production.up.railway.app';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
