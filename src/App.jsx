@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+\import React, { useState, useEffect } from 'react';
 
 import { 
   Bus, LogOut, Download, UploadCloud, 
@@ -17,6 +17,31 @@ const authFetch = (url, options = {}) => {
       ...(token ? { 'Authorization': `Bearer ${token}` } : {})
     }
   });
+};
+
+// ─────────────────────────────────────────────────────────
+// PUNKT 4: pobieranie chronionych plików.
+// Endpoint /api/files/:filename wymaga teraz tokenu, więc nie można
+// go już linkować zwykłym <a href> (przeglądarka nie dołączy nagłówka
+// Authorization do kliknięcia linku). Pobieramy plik przez fetch
+// z tokenem, zamieniamy na blob i otwieramy w nowej karcie.
+// ─────────────────────────────────────────────────────────
+const downloadProtectedFile = async (url) => {
+  try {
+    const res = await authFetch(url);
+    if (!res.ok) {
+      alert('Nie udało się pobrać pliku. Sprawdź, czy masz do niego dostęp.');
+      return;
+    }
+    const blob = await res.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    // Zwalniamy pamięć po chwili — wystarczająco długo, aby karta zdążyła wczytać plik.
+    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+  } catch (err) {
+    console.error(err);
+    alert('Błąd podczas pobierania pliku.');
+  }
 };
 
 // ─────────────────────────────────────────────────────────
@@ -599,8 +624,10 @@ export default function App() {
               Zaloguj się
             </button>
           </form>
-          
-          <p className="text-[10px] text-center text-zinc-500 mt-6">Domyślny admin - Login: <b className="text-zinc-400">admin</b> | Hasło: <b className="text-zinc-400">123</b></p>
+
+          {/* PUNKT 1: usunięto wyświetlanie domyślnych danych logowania admina.
+              Hasło admina ustawiasz teraz przez zmienną środowiskową
+              ADMIN_PASSWORD w Railway — nigdy nie jest widoczne w aplikacji. */}
         </div>
       </div>
     );
@@ -652,7 +679,13 @@ export default function App() {
                     <div className="flex flex-col justify-center min-w-[220px]">
                       <div className="p-5 bg-zinc-950/50 rounded-2xl border border-zinc-800/80 space-y-4">
                         <div className="flex items-center gap-3"><FileText className="w-8 h-8 text-zinc-400" /><div><p className="text-xs text-zinc-500">Rozkład jazdy</p><p className="text-xs font-medium text-zinc-400">Pobierz załącznik</p></div></div>
-                        <a href={`${API_URL}${myShift.pdfUrl}`} target="_blank" rel="noreferrer" className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-zinc-100 hover:bg-white text-zinc-900 rounded-xl text-sm font-medium transition-colors"><Download className="w-4 h-4" /> Otwórz PDF</a>
+                        {/* PUNKT 4: pobieranie chronionego pliku przez authFetch + blob, nie zwykły <a href> */}
+                        <button
+                          onClick={() => downloadProtectedFile(`${API_URL}${myShift.pdfUrl}`)}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-zinc-100 hover:bg-white text-zinc-900 rounded-xl text-sm font-medium transition-colors"
+                        >
+                          <Download className="w-4 h-4" /> Otwórz PDF
+                        </button>
                       </div>
                     </div>
                   )}
@@ -721,7 +754,7 @@ export default function App() {
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-zinc-500 mb-1.5">Hasło</label>
-                          <input required type="text" placeholder="np. vPKM123" value={newDriverPass} onChange={(e) => setNewDriverPass(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50" />
+                          <input required type="password" placeholder="np. vPKM123" value={newDriverPass} onChange={(e) => setNewDriverPass(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50" />
                         </div>
                         <button type="submit" className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm mt-2">Stwórz konto</button>
                       </form>
@@ -830,7 +863,13 @@ export default function App() {
                             <div><p className="font-medium text-zinc-200">{report.driverName}</p><p className="text-xs text-zinc-500">Wysłano: {report.date}</p></div>
                           </div>
                           <div className="flex items-center gap-3 w-full lg:w-auto">
-                            <a href={`${API_URL}${report.pdfUrl}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-zinc-300"><FileText className="w-4 h-4 text-emerald-400" /> Pobierz Raport PDF</a>
+                            {/* PUNKT 4: pobieranie chronionego pliku przez authFetch + blob, nie zwykły <a href> */}
+                            <button
+                              onClick={() => downloadProtectedFile(`${API_URL}${report.pdfUrl}`)}
+                              className="flex items-center gap-2 px-4 py-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-zinc-300"
+                            >
+                              <FileText className="w-4 h-4 text-emerald-400" /> Pobierz Raport PDF
+                            </button>
                             <div className="flex gap-2">
                               <button onClick={() => handleReportAction(report.id, 'approve')} className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20"><CheckCircle className="w-5 h-5" /></button>
                               <button onClick={() => handleReportAction(report.id, 'reject')} className="p-2.5 bg-red-500/10 text-red-400 rounded-xl border border-red-500/20"><XCircle className="w-5 h-5" /></button>
