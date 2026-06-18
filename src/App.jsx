@@ -844,8 +844,10 @@ export default function App() {
             />
             <button 
               type="submit" 
+              disabled={isLoading}
               className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl transition-colors text-sm mt-2 shadow-lg"
             >
+               {isLoading ? 'Łączenie...' : 'Zaloguj się'}
               Zaloguj się
             </button>
           </form>
