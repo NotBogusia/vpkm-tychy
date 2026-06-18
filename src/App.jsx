@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Bus, LogOut, Download, UploadCloud, 
   FileText, CheckCircle, Plus, FileCheck, XCircle, FileUp, Users, UserPlus, ShieldAlert,
-  Pencil, Truck, UserX, Save, X, KeyRound
+  Pencil, Truck, UserX, Save, X, KeyRound, ChevronDown, ChevronUp
 } from 'lucide-react';
 
 const API_URL = 'https://vpkm-backend-production.up.railway.app';
@@ -37,210 +37,470 @@ const downloadProtectedFile = async (url) => {
 };
 
 // ---------------------------------------------------------
+// Stałe — listy wyboru
+// ---------------------------------------------------------
+const VEHICLE_TYPES = [
+  'Autobus standardowy',
+  'Autobus przegubowy',
+  'Autobus midi',
+  'Autobus mini',
+  'Trolejbus',
+  'Tramwaj',
+];
+
+const FLEET_TYPES = [
+  'miejski',
+  'podmiejski',
+  'regionalny',
+  'szkolny',
+  'turystyczny',
+];
+
+const VEHICLE_STATUSES = [
+  { value: 'sprawny',       label: 'Sprawny',         color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  { value: 'w_naprawie',    label: 'W naprawie',       color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+  { value: 'wycofany',      label: 'Wycofany',         color: 'text-red-400 bg-red-500/10 border-red-500/20' },
+  { value: 'rezerwowy',     label: 'Rezerwowy',        color: 'text-zinc-400 bg-zinc-800 border-zinc-700' },
+];
+
+const statusBadge = (value) => {
+  const s = VEHICLE_STATUSES.find(x => x.value === value) || VEHICLE_STATUSES[0];
+  return (
+    <span className={`px-2 py-1 rounded-md text-xs font-medium border ${s.color}`}>
+      {s.label}
+    </span>
+  );
+};
+
+// ---------------------------------------------------------
+// Pusty obiekt pojazdu — używany przy inicjalizacji formularzy
+// ---------------------------------------------------------
+const emptyVehicle = {
+  busNumber: '',
+  brand: '',
+  model: '',
+  vehicleType: '',
+  fleetType: '',
+  status: 'sprawny',
+  yearManufactured: '',
+  registrationNumber: '',
+  assignedDriverId: '',
+  notes: '',
+};
+
+// ---------------------------------------------------------
+// FleetForm — współdzielony formularz dodawania / edycji
+// ---------------------------------------------------------
+const FleetForm = ({ values, onChange, driversList, onSubmit, onCancel, submitLabel }) => {
+  const field = (name) => ({
+    value: values[name],
+    onChange: (e) => onChange(name, e.target.value),
+  });
+
+  const inputCls = "w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50";
+  const labelCls = "block text-xs font-medium text-zinc-500 mb-1.5";
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-5">
+      {/* Wiersz 1 — identyfikacja */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className={labelCls}>Nr taborowy *</label>
+          <input required type="text" placeholder="np. 421" {...field('busNumber')} className={inputCls} />
+        </div>
+        <div>
+          <label className={labelCls}>Nr rejestracyjny</label>
+          <input type="text" placeholder="np. SY 12345" {...field('registrationNumber')} className={inputCls} />
+        </div>
+        <div>
+          <label className={labelCls}>Rok produkcji</label>
+          <input type="text" placeholder="np. 2019" maxLength={4} {...field('yearManufactured')} className={inputCls} />
+        </div>
+      </div>
+
+      {/* Wiersz 2 — marka i model */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className={labelCls}>Marka *</label>
+          <input required type="text" placeholder="np. Solaris" {...field('brand')} className={inputCls} />
+        </div>
+        <div>
+          <label className={labelCls}>Typ / Model *</label>
+          <input required type="text" placeholder="np. Urbino 18" {...field('model')} className={inputCls} />
+        </div>
+      </div>
+
+      {/* Wiersz 3 — klasyfikacja */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className={labelCls}>Rodzaj pojazdu</label>
+          <select {...field('vehicleType')} className={inputCls}>
+            <option value="">-- wybierz --</option>
+            {VEHICLE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>Typ taboru</label>
+          <select {...field('fleetType')} className={inputCls}>
+            <option value="">-- wybierz --</option>
+            {FLEET_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>Stan</label>
+          <select {...field('status')} className={inputCls}>
+            {VEHICLE_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Wiersz 4 — kierowca + uwagi */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className={labelCls}>Przypisany kierowca</label>
+          <select {...field('assignedDriverId')} className={inputCls}>
+            <option value="">-- Brak --</option>
+            {driversList.map(d => (
+              <option key={d.id} value={d.id}>{d.displayName}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>Uwagi</label>
+          <input type="text" placeholder="np. tylko trasy płaskie" {...field('notes')} className={inputCls} />
+        </div>
+      </div>
+
+      {/* Przyciski */}
+      <div className="flex gap-3 pt-2">
+        <button type="submit" className="flex items-center gap-2 px-6 py-2.5 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors">
+          <Save className="w-4 h-4" /> {submitLabel}
+        </button>
+        <button type="button" onClick={onCancel} className="p-2.5 bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-xl transition-colors">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </form>
+  );
+};
+
+// ---------------------------------------------------------
 // FleetView — wyniesiony poza App żeby nie tracić fokusa
 // ---------------------------------------------------------
 const FleetView = ({
   isAdmin,
   fleet,
   driversList,
-  fleetEditId,
-  fleetEditBusNumber,
-  fleetEditModel,
-  fleetEditDriverId,
-  showAddVehicle,
-  newBusNumber,
-  newBusModel,
-  newBusDriverId,
-  setFleetEditBusNumber,
-  setFleetEditModel,
-  setFleetEditDriverId,
-  setFleetEditId,
-  setShowAddVehicle,
-  setNewBusNumber,
-  setNewBusModel,
-  setNewBusDriverId,
-  handleAddVehicle,
-  startEditVehicle,
-  handleSaveVehicle,
-  handleUnassignDriver,
-  handleDeleteVehicle,
-}) => (
-  <div className="animate-in fade-in duration-500 space-y-4">
-    <div className="flex items-center justify-between">
-      <h2 className="text-xl font-medium text-zinc-200">Tabor</h2>
-      {isAdmin && (
-        <button
-          onClick={() => setShowAddVehicle(v => !v)}
-          className="flex items-center gap-2 px-4 py-2 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Dodaj pojazd
-        </button>
-      )}
-    </div>
+  onRefresh,
+}) => {
+  const [showAdd, setShowAdd] = useState(false);
+  const [addValues, setAddValues] = useState(emptyVehicle);
+  const [editId, setEditId] = useState(null);
+  const [editValues, setEditValues] = useState(emptyVehicle);
+  const [expandedId, setExpandedId] = useState(null);
 
-    {isAdmin && showAddVehicle && (
-      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
-        <h3 className="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2">
-          <Truck className="w-4 h-4 text-emerald-400" /> Nowy pojazd
-        </h3>
-        <form onSubmit={handleAddVehicle} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          <div>
-            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Nr taborowy</label>
-            <input
-              required type="text" placeholder="np. 421"
-              value={newBusNumber} onChange={(e) => setNewBusNumber(e.target.value)}
-              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Model</label>
-            <input
-              required type="text" placeholder="np. Solaris Urbino 18"
-              value={newBusModel} onChange={(e) => setNewBusModel(e.target.value)}
-              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Przypisany kierowca</label>
-            <select
-              value={newBusDriverId} onChange={(e) => setNewBusDriverId(e.target.value)}
-              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
-            >
-              <option value="">-- Brak --</option>
-              {driversList.map(d => (
-                <option key={d.id} value={d.id}>{d.displayName}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex gap-2">
-            <button type="submit" className="flex-1 py-2.5 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors">
-              Dodaj
-            </button>
-            <button type="button" onClick={() => setShowAddVehicle(false)} className="p-2.5 bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-xl transition-colors">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </form>
+  const handleAddChange = (name, value) => setAddValues(v => ({ ...v, [name]: value }));
+  const handleEditChange = (name, value) => setEditValues(v => ({ ...v, [name]: value }));
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    const selectedDriver = driversList.find(d => d.id === addValues.assignedDriverId);
+    try {
+      const res = await authFetch(`${API_URL}/api/fleet`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...addValues,
+          assignedDriverName: selectedDriver ? selectedDriver.displayName : 'Brak',
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAddValues(emptyVehicle);
+        setShowAdd(false);
+        onRefresh();
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  const startEdit = (vehicle) => {
+    setEditId(vehicle.id);
+    setEditValues({
+      busNumber: vehicle.busNumber,
+      brand: vehicle.brand || '',
+      model: vehicle.model,
+      vehicleType: vehicle.vehicleType || '',
+      fleetType: vehicle.fleetType || '',
+      status: vehicle.status || 'sprawny',
+      yearManufactured: vehicle.yearManufactured || '',
+      registrationNumber: vehicle.registrationNumber || '',
+      assignedDriverId: vehicle.assignedDriverId || '',
+      notes: vehicle.notes || '',
+    });
+    setExpandedId(null);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    const selectedDriver = driversList.find(d => d.id === editValues.assignedDriverId);
+    try {
+      const res = await authFetch(`${API_URL}/api/fleet/${editId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...editValues,
+          assignedDriverName: selectedDriver ? selectedDriver.displayName : 'Brak',
+        })
+      });
+      if (res.ok) {
+        setEditId(null);
+        onRefresh();
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUnassign = async (vehicle) => {
+    if (!confirm(`Anulować przypisanie kierowcy do wozu #${vehicle.busNumber}?`)) return;
+    try {
+      await authFetch(`${API_URL}/api/fleet/${vehicle.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          busNumber: vehicle.busNumber,
+          brand: vehicle.brand,
+          model: vehicle.model,
+          vehicleType: vehicle.vehicleType,
+          fleetType: vehicle.fleetType,
+          status: vehicle.status,
+          yearManufactured: vehicle.yearManufactured,
+          registrationNumber: vehicle.registrationNumber,
+          assignedDriverId: '',
+          assignedDriverName: 'Brak',
+          notes: vehicle.notes,
+        })
+      });
+      onRefresh();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Usunąć pojazd z taboru?')) return;
+    try {
+      await authFetch(`${API_URL}/api/fleet/${id}`, { method: 'DELETE' });
+      onRefresh();
+    } catch (err) { console.error(err); }
+  };
+
+  return (
+    <div className="animate-in fade-in duration-500 space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-medium text-zinc-200">Tabor</h2>
+        {isAdmin && (
+          <button
+            onClick={() => setShowAdd(v => !v)}
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Dodaj pojazd
+          </button>
+        )}
       </div>
-    )}
 
-    <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
-      {fleet.length === 0 ? (
-        <div className="p-10 text-center text-zinc-500 text-sm">
-          Brak pojazdów w taborze.{isAdmin && ' Dodaj pierwszy wóz przyciskiem powyżej.'}
-        </div>
-      ) : (
-        <div className="divide-y divide-zinc-800/60">
-          <div className="hidden md:grid md:grid-cols-12 px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-            <div className="col-span-2">Nr tab.</div>
-            <div className="col-span-4">Model</div>
-            <div className="col-span-4">Przypisany kierowca</div>
-            {isAdmin && <div className="col-span-2 text-right">Akcje</div>}
-          </div>
-
-          {fleet.map((vehicle) => (
-            <div key={vehicle.id} className="px-6 py-4 hover:bg-zinc-800/20 transition-colors">
-              {fleetEditId === vehicle.id ? (
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-                  <div className="md:col-span-2">
-                    <input
-                      type="text" value={fleetEditBusNumber}
-                      onChange={(e) => setFleetEditBusNumber(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-950 border border-emerald-500/40 rounded-xl text-zinc-200 text-sm focus:outline-none"
-                    />
-                  </div>
-                  <div className="md:col-span-4">
-                    <input
-                      type="text" value={fleetEditModel}
-                      onChange={(e) => setFleetEditModel(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-950 border border-emerald-500/40 rounded-xl text-zinc-200 text-sm focus:outline-none"
-                    />
-                  </div>
-                  <div className="md:col-span-4">
-                    <select
-                      value={fleetEditDriverId}
-                      onChange={(e) => setFleetEditDriverId(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-950 border border-emerald-500/40 rounded-xl text-zinc-200 text-sm focus:outline-none"
-                    >
-                      <option value="">-- Brak --</option>
-                      {driversList.map(d => (
-                        <option key={d.id} value={d.id}>{d.displayName}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="md:col-span-2 flex gap-2 justify-end">
-                    <button
-                      onClick={() => handleSaveVehicle(vehicle.id)}
-                      className="p-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/20 transition-colors"
-                    >
-                      <Save className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setFleetEditId(null)}
-                      className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:bg-zinc-700 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-12 gap-3 items-center">
-                  <div className="col-span-5 md:col-span-2">
-                    <span className="inline-flex items-center justify-center w-12 h-10 bg-zinc-950 border border-zinc-800 rounded-xl text-emerald-400 font-bold text-sm">
-                      {vehicle.busNumber}
-                    </span>
-                  </div>
-                  <div className="col-span-7 md:col-span-4">
-                    <p className="text-sm font-medium text-zinc-200">{vehicle.model}</p>
-                  </div>
-                  <div className="col-span-9 md:col-span-4 flex items-center gap-2">
-                    {vehicle.assignedDriverId ? (
-                      <>
-                        <div className="w-6 h-6 bg-zinc-800 rounded-full flex items-center justify-center text-[10px] font-medium text-emerald-400 border border-zinc-700">
-                          {vehicle.assignedDriverName.charAt(0)}
-                        </div>
-                        <span className="text-sm text-zinc-300">{vehicle.assignedDriverName}</span>
-                      </>
-                    ) : (
-                      <span className="text-xs text-zinc-600 italic">Nieprzypisany</span>
-                    )}
-                  </div>
-                  {isAdmin && (
-                    <div className="col-span-3 md:col-span-2 flex gap-2 justify-end">
-                      <button
-                        onClick={() => startEditVehicle(vehicle)}
-                        className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
-                        title="Edytuj"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      {vehicle.assignedDriverId && (
-                        <button
-                          onClick={() => handleUnassignDriver(vehicle)}
-                          className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
-                          title="Anuluj przypisanie kierowcy"
-                        >
-                          <UserX className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeleteVehicle(vehicle.id)}
-                        className="p-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-colors"
-                        title="Usuń pojazd"
-                      >
-                        <XCircle className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+      {/* Formularz dodawania */}
+      {isAdmin && showAdd && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+          <h3 className="text-sm font-medium text-zinc-300 mb-5 flex items-center gap-2">
+            <Truck className="w-4 h-4 text-emerald-400" /> Nowy pojazd
+          </h3>
+          <FleetForm
+            values={addValues}
+            onChange={handleAddChange}
+            driversList={driversList}
+            onSubmit={handleAddSubmit}
+            onCancel={() => setShowAdd(false)}
+            submitLabel="Dodaj pojazd"
+          />
         </div>
       )}
+
+      {/* Lista pojazdów */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
+        {fleet.length === 0 ? (
+          <div className="p-10 text-center text-zinc-500 text-sm">
+            Brak pojazdów w taborze.{isAdmin && ' Dodaj pierwszy wóz przyciskiem powyżej.'}
+          </div>
+        ) : (
+          <div className="divide-y divide-zinc-800/60">
+            {/* Nagłówek tabeli */}
+            <div className="hidden md:grid md:grid-cols-12 px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">
+              <div className="col-span-1">Nr tab.</div>
+              <div className="col-span-3">Marka / Model</div>
+              <div className="col-span-2">Rodzaj</div>
+              <div className="col-span-2">Stan</div>
+              <div className="col-span-2">Kierowca</div>
+              {isAdmin && <div className="col-span-2 text-right">Akcje</div>}
+            </div>
+
+            {fleet.map((vehicle) => (
+              <div key={vehicle.id}>
+                {/* Tryb edycji */}
+                {editId === vehicle.id ? (
+                  <div className="px-6 py-5">
+                    <p className="text-xs text-zinc-500 mb-4 flex items-center gap-2">
+                      <Pencil className="w-3 h-3" /> Edycja: wóz #{vehicle.busNumber}
+                    </p>
+                    <FleetForm
+                      values={editValues}
+                      onChange={handleEditChange}
+                      driversList={driversList}
+                      onSubmit={handleEditSubmit}
+                      onCancel={() => setEditId(null)}
+                      submitLabel="Zapisz zmiany"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    {/* Wiersz główny */}
+                    <div
+                      className="px-6 py-4 hover:bg-zinc-800/20 transition-colors cursor-pointer"
+                      onClick={() => setExpandedId(expandedId === vehicle.id ? null : vehicle.id)}
+                    >
+                      <div className="grid grid-cols-12 gap-3 items-center">
+                        {/* Nr tab */}
+                        <div className="col-span-2 md:col-span-1">
+                          <span className="inline-flex items-center justify-center w-12 h-10 bg-zinc-950 border border-zinc-800 rounded-xl text-emerald-400 font-bold text-sm">
+                            {vehicle.busNumber}
+                          </span>
+                        </div>
+
+                        {/* Marka / Model */}
+                        <div className="col-span-6 md:col-span-3">
+                          <p className="text-sm font-medium text-zinc-200">
+                            {vehicle.brand ? `${vehicle.brand} ${vehicle.model}` : vehicle.model}
+                          </p>
+                          {vehicle.registrationNumber && (
+                            <p className="text-xs text-zinc-600 mt-0.5">{vehicle.registrationNumber}</p>
+                          )}
+                        </div>
+
+                        {/* Rodzaj — ukryty na mobile */}
+                        <div className="hidden md:block md:col-span-2">
+                          <p className="text-xs text-zinc-400">{vehicle.vehicleType || '—'}</p>
+                          <p className="text-xs text-zinc-600 mt-0.5">{vehicle.fleetType || ''}</p>
+                        </div>
+
+                        {/* Stan */}
+                        <div className="hidden md:block md:col-span-2">
+                          {statusBadge(vehicle.status)}
+                        </div>
+
+                        {/* Kierowca */}
+                        <div className="hidden md:flex md:col-span-2 items-center gap-2">
+                          {vehicle.assignedDriverId ? (
+                            <>
+                              <div className="w-6 h-6 bg-zinc-800 rounded-full flex items-center justify-center text-[10px] font-medium text-emerald-400 border border-zinc-700">
+                                {vehicle.assignedDriverName.charAt(0)}
+                              </div>
+                              <span className="text-xs text-zinc-300 truncate">{vehicle.assignedDriverName}</span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-zinc-600 italic">Nieprzypisany</span>
+                          )}
+                        </div>
+
+                        {/* Akcje + chevron */}
+                        <div className="col-span-4 md:col-span-2 flex gap-2 items-center justify-end">
+                          {isAdmin && (
+                            <>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); startEdit(vehicle); }}
+                                className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
+                                title="Edytuj"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              {vehicle.assignedDriverId && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleUnassign(vehicle); }}
+                                  className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+                                  title="Anuluj przypisanie kierowcy"
+                                >
+                                  <UserX className="w-4 h-4" />
+                                </button>
+                              )}
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDelete(vehicle.id); }}
+                                className="p-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-colors"
+                                title="Usuń pojazd"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                          <span className="text-zinc-600">
+                            {expandedId === vehicle.id
+                              ? <ChevronUp className="w-4 h-4" />
+                              : <ChevronDown className="w-4 h-4" />
+                            }
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Panel rozwinięty — szczegóły */}
+                    {expandedId === vehicle.id && (
+                      <div className="px-6 pb-5 bg-zinc-950/30">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-800/60">
+                          <div>
+                            <p className="text-xs text-zinc-500 mb-1">Marka</p>
+                            <p className="text-sm text-zinc-200">{vehicle.brand || '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-zinc-500 mb-1">Typ / Model</p>
+                            <p className="text-sm text-zinc-200">{vehicle.model || '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-zinc-500 mb-1">Rodzaj pojazdu</p>
+                            <p className="text-sm text-zinc-200">{vehicle.vehicleType || '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-zinc-500 mb-1">Typ taboru</p>
+                            <p className="text-sm text-zinc-200">{vehicle.fleetType || '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-zinc-500 mb-1">Nr rejestracyjny</p>
+                            <p className="text-sm text-zinc-200">{vehicle.registrationNumber || '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-zinc-500 mb-1">Rok produkcji</p>
+                            <p className="text-sm text-zinc-200">{vehicle.yearManufactured || '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-zinc-500 mb-1">Stan</p>
+                            {statusBadge(vehicle.status)}
+                          </div>
+                          <div>
+                            <p className="text-xs text-zinc-500 mb-1">Kierowca</p>
+                            <p className="text-sm text-zinc-200">{vehicle.assignedDriverName || 'Brak'}</p>
+                          </div>
+                          {vehicle.notes && (
+                            <div className="col-span-2 md:col-span-4">
+                              <p className="text-xs text-zinc-500 mb-1">Uwagi</p>
+                              <p className="text-sm text-zinc-300 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5">{vehicle.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ---------------------------------------------------------
 // GŁÓWNY KOMPONENT
@@ -259,10 +519,8 @@ export default function App() {
   const [driverReportFile, setDriverReportFile] = useState(null);
   const [isUploaded, setIsUploaded] = useState(false);
 
-  // 2. HISTORIA SŁUŻB
   const [shiftHistory, setShiftHistory] = useState([]);
 
-  // 3. ZMIANA HASŁA
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -286,16 +544,7 @@ export default function App() {
   const [newDriverName, setNewDriverName] = useState('');
   const [newDriverSuccess, setNewDriverSuccess] = useState(false);
 
-  // TABOR
   const [fleet, setFleet] = useState([]);
-  const [fleetEditId, setFleetEditId] = useState(null);
-  const [fleetEditBusNumber, setFleetEditBusNumber] = useState('');
-  const [fleetEditModel, setFleetEditModel] = useState('');
-  const [fleetEditDriverId, setFleetEditDriverId] = useState('');
-  const [showAddVehicle, setShowAddVehicle] = useState(false);
-  const [newBusNumber, setNewBusNumber] = useState('');
-  const [newBusModel, setNewBusModel] = useState('');
-  const [newBusDriverId, setNewBusDriverId] = useState('');
 
   useEffect(() => {
     if (!isLoggedIn || !user) return;
@@ -306,7 +555,6 @@ export default function App() {
         .then(data => setMyShift(data.shift || null))
         .catch(err => console.error(err));
 
-      // 2. Pobierz historię służb kierowcy
       fetchShiftHistory(user.id);
     }
 
@@ -351,7 +599,6 @@ export default function App() {
       .catch(err => console.error(err));
   };
 
-  // 2. HISTORIA SŁUŻB
   const fetchShiftHistory = (driverId) => {
     authFetch(`${API_URL}/api/shifts/history/${driverId}`)
       .then(res => res.json())
@@ -417,7 +664,6 @@ export default function App() {
       const res = await authFetch(`${API_URL}/api/reports`, { method: 'POST', body: formData });
       if (res.ok) {
         setIsUploaded(true);
-        // Odśwież historię po wysłaniu raportu
         fetchShiftHistory(user.id);
       }
     } catch (err) { console.error(err); }
@@ -447,7 +693,6 @@ export default function App() {
     } catch (error) { console.error(error); }
   };
 
-  // 1. USUWANIE KIEROWCY
   const handleDeleteDriver = async (driverId) => {
     if (!confirm('Usunąć tego kierowcę? Wszystkie jego służby i raporty zostaną usunięte!')) return;
     try {
@@ -460,7 +705,6 @@ export default function App() {
     } catch (err) { console.error(err); }
   };
 
-  // 3. ZMIANA HASŁA
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setChangePasswordMsg('');
@@ -528,89 +772,38 @@ export default function App() {
     } catch (err) { console.error(err); }
   };
 
-  // TABOR: DODAWANIE
-  const handleAddVehicle = async (e) => {
-    e.preventDefault();
-    const selectedDriver = driversList.find(d => d.id === newBusDriverId);
-    try {
-      const res = await authFetch(`${API_URL}/api/fleet`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          busNumber: newBusNumber,
-          model: newBusModel,
-          assignedDriverId: newBusDriverId || '',
-          assignedDriverName: selectedDriver ? selectedDriver.displayName : 'Brak'
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setNewBusNumber(''); setNewBusModel(''); setNewBusDriverId('');
-        setShowAddVehicle(false);
-        fetchFleet();
-      }
-    } catch (err) { console.error(err); }
-  };
-
-  const startEditVehicle = (vehicle) => {
-    setFleetEditId(vehicle.id);
-    setFleetEditBusNumber(vehicle.busNumber);
-    setFleetEditModel(vehicle.model);
-    setFleetEditDriverId(vehicle.assignedDriverId || '');
-  };
-
-  const handleSaveVehicle = async (id) => {
-    const selectedDriver = driversList.find(d => d.id === fleetEditDriverId);
-    try {
-      const res = await authFetch(`${API_URL}/api/fleet/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          busNumber: fleetEditBusNumber,
-          model: fleetEditModel,
-          assignedDriverId: fleetEditDriverId || '',
-          assignedDriverName: selectedDriver ? selectedDriver.displayName : 'Brak'
-        })
-      });
-      if (res.ok) {
-        setFleetEditId(null);
-        fetchFleet();
-      }
-    } catch (err) { console.error(err); }
-  };
-
-  const handleUnassignDriver = async (vehicle) => {
-    if (!confirm(`Anulować przypisanie kierowcy do wozu #${vehicle.busNumber}?`)) return;
-    try {
-      await authFetch(`${API_URL}/api/fleet/${vehicle.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          busNumber: vehicle.busNumber,
-          model: vehicle.model,
-          assignedDriverId: '',
-          assignedDriverName: 'Brak'
-        })
-      });
-      fetchFleet();
-    } catch (err) { console.error(err); }
-  };
-
-  const handleDeleteVehicle = async (id) => {
-    if (!confirm('Usunąć pojazd z taboru?')) return;
-    try {
-      await authFetch(`${API_URL}/api/fleet/${id}`, { method: 'DELETE' });
-      fetchFleet();
-    } catch (err) { console.error(err); }
-  };
-
-  const fleetViewProps = {
-    fleet, driversList, fleetEditId, fleetEditBusNumber, fleetEditModel, fleetEditDriverId,
-    showAddVehicle, newBusNumber, newBusModel, newBusDriverId,
-    setFleetEditBusNumber, setFleetEditModel, setFleetEditDriverId, setFleetEditId,
-    setShowAddVehicle, setNewBusNumber, setNewBusModel, setNewBusDriverId,
-    handleAddVehicle, startEditVehicle, handleSaveVehicle, handleUnassignDriver, handleDeleteVehicle,
-  };
+  // Formularz zmiany hasła — współdzielony
+  const ChangePasswordForm = () => (
+    <div className="animate-in fade-in duration-500">
+      <h2 className="text-xl font-medium mb-4 text-zinc-200">Zmiana hasła</h2>
+      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-md">
+        <form onSubmit={handleChangePassword} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Obecne hasło</label>
+            <input
+              required type="password"
+              value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Nowe hasło (min. 6 znaków)</label>
+            <input
+              required type="password" minLength={6}
+              value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+            />
+          </div>
+          {changePasswordMsg && (
+            <p className="text-sm text-zinc-300">{changePasswordMsg}</p>
+          )}
+          <button type="submit" className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm">
+            Zmień hasło
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 
   // ---------------------------------------------------------
   // EKRAN LOGOWANIA
@@ -701,7 +894,6 @@ export default function App() {
                 >
                   <Truck className="h-5 w-5" />
                 </button>
-                {/* 3. PRZYCISK ZMIANY HASŁA */}
                 <button
                   onClick={() => setShowChangePassword(v => !v)}
                   className={`p-2.5 rounded-xl transition-colors ${showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
@@ -720,38 +912,7 @@ export default function App() {
 
         <main className="flex-1 space-y-6">
 
-          {/* 3. FORMULARZ ZMIANY HASŁA — widoczny dla każdego zalogowanego */}
-          {showChangePassword && (
-            <div className="animate-in fade-in duration-500">
-              <h2 className="text-xl font-medium mb-4 text-zinc-200">Zmiana hasła</h2>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-md">
-                <form onSubmit={handleChangePassword} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-500 mb-1.5">Obecne hasło</label>
-                    <input
-                      required type="password"
-                      value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-500 mb-1.5">Nowe hasło (min. 6 znaków)</label>
-                    <input
-                      required type="password" minLength={6}
-                      value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
-                    />
-                  </div>
-                  {changePasswordMsg && (
-                    <p className="text-sm text-zinc-300">{changePasswordMsg}</p>
-                  )}
-                  <button type="submit" className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm">
-                    Zmień hasło
-                  </button>
-                </form>
-              </div>
-            </div>
-          )}
+          {showChangePassword && <ChangePasswordForm />}
 
           {/* WIDOK KIEROWCY */}
           {user.role === 'driver' && !showChangePassword && activeTab === 'dashboard' && (
@@ -794,7 +955,6 @@ export default function App() {
                 )}
               </div>
 
-              {/* 2. HISTORIA SŁUŻB */}
               {shiftHistory.length > 0 && (
                 <div>
                   <h2 className="text-xl font-medium mb-4 text-zinc-200">Historia służb</h2>
@@ -856,7 +1016,12 @@ export default function App() {
           )}
 
           {user.role === 'driver' && !showChangePassword && activeTab === 'fleet' && (
-            <FleetView isAdmin={false} {...fleetViewProps} />
+            <FleetView
+              isAdmin={false}
+              fleet={fleet}
+              driversList={driversList}
+              onRefresh={fetchFleet}
+            />
           )}
 
           {/* PANEL ADMINA */}
@@ -910,7 +1075,6 @@ export default function App() {
                       {driversList.length === 0 ? (
                         <p className="text-sm text-zinc-500">Brak zarejestrowanych kierowców. Stwórz pierwsze konto.</p>
                       ) : (
-                        // 1. LISTA KIEROWCÓW Z PRZYCISKIEM USUWANIA
                         driversList.map(d => (
                           <div key={d.id} className="flex justify-between items-center p-3 bg-zinc-950 border border-zinc-800/80 rounded-xl">
                             <div>
@@ -1044,41 +1208,13 @@ export default function App() {
               )}
 
               {adminSubTab === 'fleet' && (
-                <FleetView isAdmin={true} {...fleetViewProps} />
+                <FleetView
+                  isAdmin={true}
+                  fleet={fleet}
+                  driversList={driversList}
+                  onRefresh={fetchFleet}
+                />
               )}
-            </div>
-          )}
-
-          {/* ZMIANA HASŁA DLA ADMINA */}
-          {user.role === 'admin' && showChangePassword && (
-            <div className="animate-in fade-in duration-500">
-              <h2 className="text-xl font-medium mb-4 text-zinc-200">Zmiana hasła</h2>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-md">
-                <form onSubmit={handleChangePassword} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-500 mb-1.5">Obecne hasło</label>
-                    <input
-                      required type="password"
-                      value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-500 mb-1.5">Nowe hasło (min. 6 znaków)</label>
-                    <input
-                      required type="password" minLength={6}
-                      value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
-                    />
-                  </div>
-                  {changePasswordMsg && (
-                    <p className="text-sm text-zinc-300">{changePasswordMsg}</p>
-                  )}
-                  <button type="submit" className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm">
-                    Zmień hasło
-                  </button>
-                </form>
-              </div>
             </div>
           )}
 
