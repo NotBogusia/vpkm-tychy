@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Bus, LogOut, Download, UploadCloud, 
   FileText, CheckCircle, Plus, FileCheck, XCircle, FileUp, Users, UserPlus, ShieldAlert,
-  Pencil, Truck, UserX, Save, X
+  Pencil, Truck, UserX, Save, X, KeyRound
 } from 'lucide-react';
 
 const API_URL = 'https://vpkm-backend-production.up.railway.app';
@@ -19,13 +19,6 @@ const authFetch = (url, options = {}) => {
   });
 };
 
-// ─────────────────────────────────────────────────────────
-// PUNKT 4: pobieranie chronionych plików.
-// Endpoint /api/files/:filename wymaga teraz tokenu, więc nie można
-// go już linkować zwykłym <a href> (przeglądarka nie dołączy nagłówka
-// Authorization do kliknięcia linku). Pobieramy plik przez fetch
-// z tokenem, zamieniamy na blob i otwieramy w nowej karcie.
-// ─────────────────────────────────────────────────────────
 const downloadProtectedFile = async (url) => {
   try {
     const res = await authFetch(url);
@@ -36,7 +29,6 @@ const downloadProtectedFile = async (url) => {
     const blob = await res.blob();
     const blobUrl = window.URL.createObjectURL(blob);
     window.open(blobUrl, '_blank');
-    // Zwalniamy pamięć po chwili — wystarczająco długo, aby karta zdążyła wczytać plik.
     setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
   } catch (err) {
     console.error(err);
@@ -44,11 +36,9 @@ const downloadProtectedFile = async (url) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────
-// FleetView wyniesiony POZA App, żeby React nie remontował
-// go przy każdym re-renderze (powodowało utratę fokusa).
-// Wszystkie potrzebne dane i handlery przekazujemy przez props.
-// ─────────────────────────────────────────────────────────
+// ---------------------------------------------------------
+// FleetView — wyniesiony poza App żeby nie tracić fokusa
+// ---------------------------------------------------------
 const FleetView = ({
   isAdmin,
   fleet,
@@ -88,7 +78,6 @@ const FleetView = ({
       )}
     </div>
 
-    {/* Formularz dodawania pojazdu */}
     {isAdmin && showAddVehicle && (
       <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
         <h3 className="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2">
@@ -135,7 +124,6 @@ const FleetView = ({
       </div>
     )}
 
-    {/* Lista pojazdów */}
     <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
       {fleet.length === 0 ? (
         <div className="p-10 text-center text-zinc-500 text-sm">
@@ -143,7 +131,6 @@ const FleetView = ({
         </div>
       ) : (
         <div className="divide-y divide-zinc-800/60">
-          {/* Nagłówek tabeli */}
           <div className="hidden md:grid md:grid-cols-12 px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">
             <div className="col-span-2">Nr tab.</div>
             <div className="col-span-4">Model</div>
@@ -154,7 +141,6 @@ const FleetView = ({
           {fleet.map((vehicle) => (
             <div key={vehicle.id} className="px-6 py-4 hover:bg-zinc-800/20 transition-colors">
               {fleetEditId === vehicle.id ? (
-                /* Tryb edycji */
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
                   <div className="md:col-span-2">
                     <input
@@ -198,7 +184,6 @@ const FleetView = ({
                   </div>
                 </div>
               ) : (
-                /* Tryb widoku */
                 <div className="grid grid-cols-12 gap-3 items-center">
                   <div className="col-span-5 md:col-span-2">
                     <span className="inline-flex items-center justify-center w-12 h-10 bg-zinc-950 border border-zinc-800 rounded-xl text-emerald-400 font-bold text-sm">
@@ -257,6 +242,9 @@ const FleetView = ({
   </div>
 );
 
+// ---------------------------------------------------------
+// GŁÓWNY KOMPONENT
+// ---------------------------------------------------------
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
@@ -270,6 +258,15 @@ export default function App() {
   const [myShift, setMyShift] = useState(null);
   const [driverReportFile, setDriverReportFile] = useState(null);
   const [isUploaded, setIsUploaded] = useState(false);
+
+  // 2. HISTORIA SŁUŻB
+  const [shiftHistory, setShiftHistory] = useState([]);
+
+  // 3. ZMIANA HASŁA
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [changePasswordMsg, setChangePasswordMsg] = useState('');
 
   const [assignDriverId, setAssignDriverId] = useState('');
   const [assignLine, setAssignLine] = useState('');
@@ -289,7 +286,7 @@ export default function App() {
   const [newDriverName, setNewDriverName] = useState('');
   const [newDriverSuccess, setNewDriverSuccess] = useState(false);
 
-  // --- TABOR ---
+  // TABOR
   const [fleet, setFleet] = useState([]);
   const [fleetEditId, setFleetEditId] = useState(null);
   const [fleetEditBusNumber, setFleetEditBusNumber] = useState('');
@@ -308,6 +305,9 @@ export default function App() {
         .then(res => res.json())
         .then(data => setMyShift(data.shift || null))
         .catch(err => console.error(err));
+
+      // 2. Pobierz historię służb kierowcy
+      fetchShiftHistory(user.id);
     }
 
     if (user.role === 'admin') {
@@ -348,6 +348,14 @@ export default function App() {
     authFetch(`${API_URL}/api/fleet`)
       .then(res => res.json())
       .then(data => setFleet(data))
+      .catch(err => console.error(err));
+  };
+
+  // 2. HISTORIA SŁUŻB
+  const fetchShiftHistory = (driverId) => {
+    authFetch(`${API_URL}/api/shifts/history/${driverId}`)
+      .then(res => res.json())
+      .then(data => setShiftHistory(data.history || []))
       .catch(err => console.error(err));
   };
 
@@ -393,6 +401,7 @@ export default function App() {
     localStorage.removeItem('vpkm_token');
     setIsLoggedIn(false); setUser(null); setDriverReportFile(null); 
     setIsUploaded(false); setEmail(''); setPassword(''); setMyShift(null);
+    setShiftHistory([]); setShowChangePassword(false);
   };
 
   const submitDriverReport = async () => {
@@ -406,7 +415,11 @@ export default function App() {
 
     try {
       const res = await authFetch(`${API_URL}/api/reports`, { method: 'POST', body: formData });
-      if (res.ok) setIsUploaded(true);
+      if (res.ok) {
+        setIsUploaded(true);
+        // Odśwież historię po wysłaniu raportu
+        fetchShiftHistory(user.id);
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -432,6 +445,46 @@ export default function App() {
         alert(data.message);
       }
     } catch (error) { console.error(error); }
+  };
+
+  // 1. USUWANIE KIEROWCY
+  const handleDeleteDriver = async (driverId) => {
+    if (!confirm('Usunąć tego kierowcę? Wszystkie jego służby i raporty zostaną usunięte!')) return;
+    try {
+      const res = await authFetch(`${API_URL}/api/drivers/${driverId}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchDrivers();
+      } else {
+        alert('Błąd podczas usuwania kierowcy');
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  // 3. ZMIANA HASŁA
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setChangePasswordMsg('');
+    try {
+      const res = await authFetch(`${API_URL}/api/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setChangePasswordMsg('✅ Hasło zmienione pomyślnie!');
+        setCurrentPassword('');
+        setNewPassword('');
+        setTimeout(() => {
+          setShowChangePassword(false);
+          setChangePasswordMsg('');
+        }, 2000);
+      } else {
+        setChangePasswordMsg('❌ ' + (data.error || 'Błąd'));
+      }
+    } catch (err) {
+      setChangePasswordMsg('❌ Błąd połączenia z serwerem');
+    }
   };
 
   const handleAssignShift = async (e) => {
@@ -475,7 +528,7 @@ export default function App() {
     } catch (err) { console.error(err); }
   };
 
-  // --- TABOR: DODAWANIE ---
+  // TABOR: DODAWANIE
   const handleAddVehicle = async (e) => {
     e.preventDefault();
     const selectedDriver = driversList.find(d => d.id === newBusDriverId);
@@ -499,7 +552,6 @@ export default function App() {
     } catch (err) { console.error(err); }
   };
 
-  // --- TABOR: START EDYCJI ---
   const startEditVehicle = (vehicle) => {
     setFleetEditId(vehicle.id);
     setFleetEditBusNumber(vehicle.busNumber);
@@ -507,7 +559,6 @@ export default function App() {
     setFleetEditDriverId(vehicle.assignedDriverId || '');
   };
 
-  // --- TABOR: ZAPIS EDYCJI ---
   const handleSaveVehicle = async (id) => {
     const selectedDriver = driversList.find(d => d.id === fleetEditDriverId);
     try {
@@ -528,7 +579,6 @@ export default function App() {
     } catch (err) { console.error(err); }
   };
 
-  // --- TABOR: ANULOWANIE PRZYPISANIA KIEROWCY ---
   const handleUnassignDriver = async (vehicle) => {
     if (!confirm(`Anulować przypisanie kierowcy do wozu #${vehicle.busNumber}?`)) return;
     try {
@@ -546,7 +596,6 @@ export default function App() {
     } catch (err) { console.error(err); }
   };
 
-  // --- TABOR: USUWANIE ---
   const handleDeleteVehicle = async (id) => {
     if (!confirm('Usunąć pojazd z taboru?')) return;
     try {
@@ -555,34 +604,17 @@ export default function App() {
     } catch (err) { console.error(err); }
   };
 
-  // Wspólne props dla FleetView
   const fleetViewProps = {
-    fleet,
-    driversList,
-    fleetEditId,
-    fleetEditBusNumber,
-    fleetEditModel,
-    fleetEditDriverId,
-    showAddVehicle,
-    newBusNumber,
-    newBusModel,
-    newBusDriverId,
-    setFleetEditBusNumber,
-    setFleetEditModel,
-    setFleetEditDriverId,
-    setFleetEditId,
-    setShowAddVehicle,
-    setNewBusNumber,
-    setNewBusModel,
-    setNewBusDriverId,
-    handleAddVehicle,
-    startEditVehicle,
-    handleSaveVehicle,
-    handleUnassignDriver,
-    handleDeleteVehicle,
+    fleet, driversList, fleetEditId, fleetEditBusNumber, fleetEditModel, fleetEditDriverId,
+    showAddVehicle, newBusNumber, newBusModel, newBusDriverId,
+    setFleetEditBusNumber, setFleetEditModel, setFleetEditDriverId, setFleetEditId,
+    setShowAddVehicle, setNewBusNumber, setNewBusModel, setNewBusDriverId,
+    handleAddVehicle, startEditVehicle, handleSaveVehicle, handleUnassignDriver, handleDeleteVehicle,
   };
 
-  // --- EKRAN LOGOWANIA ---
+  // ---------------------------------------------------------
+  // EKRAN LOGOWANIA
+  // ---------------------------------------------------------
   if (!isLoggedIn) {
     return (
       <div className="relative min-h-screen bg-zinc-950 flex items-center justify-center p-4 font-sans text-zinc-100 overflow-hidden">
@@ -624,15 +656,14 @@ export default function App() {
               Zaloguj się
             </button>
           </form>
-
-          {/* PUNKT 1: usunięto wyświetlanie domyślnych danych logowania admina.
-              Hasło admina ustawiasz teraz przez zmienną środowiskową
-              ADMIN_PASSWORD w Railway — nigdy nie jest widoczne w aplikacji. */}
         </div>
       </div>
     );
   }
 
+  // ---------------------------------------------------------
+  // GŁÓWNY PANEL
+  // ---------------------------------------------------------
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex justify-center p-4 sm:p-8">
       <div className="w-full max-w-4xl flex flex-col gap-6">
@@ -649,57 +680,157 @@ export default function App() {
           <div className="flex gap-2">
             {user.role === 'driver' && (
               <>
-                <button onClick={() => setActiveTab('dashboard')} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'dashboard' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Bus className="h-5 w-5" /></button>
-                <button onClick={() => setActiveTab('report')} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'report' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><FileText className="h-5 w-5" /></button>
-                <button onClick={() => { setActiveTab('fleet'); fetchFleet(); fetchDrivers(); }} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'fleet' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Truck className="h-5 w-5" /></button>
+                <button
+                  onClick={() => { setActiveTab('dashboard'); setShowChangePassword(false); }}
+                  className={`p-2.5 rounded-xl transition-colors ${activeTab === 'dashboard' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  title="Dyspozycja"
+                >
+                  <Bus className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => { setActiveTab('report'); setShowChangePassword(false); }}
+                  className={`p-2.5 rounded-xl transition-colors ${activeTab === 'report' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  title="Złóż raport"
+                >
+                  <FileText className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => { setActiveTab('fleet'); setShowChangePassword(false); fetchFleet(); fetchDrivers(); }}
+                  className={`p-2.5 rounded-xl transition-colors ${activeTab === 'fleet' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  title="Tabor"
+                >
+                  <Truck className="h-5 w-5" />
+                </button>
+                {/* 3. PRZYCISK ZMIANY HASŁA */}
+                <button
+                  onClick={() => setShowChangePassword(v => !v)}
+                  className={`p-2.5 rounded-xl transition-colors ${showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  title="Zmień hasło"
+                >
+                  <KeyRound className="h-5 w-5" />
+                </button>
               </>
             )}
             <div className="w-px h-6 bg-zinc-800 my-auto mx-1"></div>
-            <button onClick={handleLogout} className="p-2.5 text-zinc-500 hover:text-red-400 transition-colors rounded-xl"><LogOut className="h-5 w-5" /></button>
+            <button onClick={handleLogout} className="p-2.5 text-zinc-500 hover:text-red-400 transition-colors rounded-xl" title="Wyloguj">
+              <LogOut className="h-5 w-5" />
+            </button>
           </div>
         </header>
 
         <main className="flex-1 space-y-6">
-          {user.role === 'driver' && activeTab === 'dashboard' && (
+
+          {/* 3. FORMULARZ ZMIANY HASŁA — widoczny dla każdego zalogowanego */}
+          {showChangePassword && (
             <div className="animate-in fade-in duration-500">
-              <h2 className="text-xl font-medium mb-4 text-zinc-200">Bieżąca dyspozycja</h2>
-              {myShift ? (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row gap-8 justify-between">
-                  <div className="space-y-6 w-full">
-                    <div className="flex items-center gap-4">
-                      <div className="h-14 w-14 bg-zinc-100 text-zinc-950 rounded-2xl flex items-center justify-center text-2xl font-bold">{myShift.line}</div>
-                      <div><p className="text-sm text-zinc-500">Brygada</p><h3 className="text-xl font-medium text-zinc-100">{myShift.brigade}</h3></div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 bg-zinc-950/50 p-4 rounded-2xl border border-zinc-800/50">
-                      <div><p className="text-xs text-zinc-500 mb-1">Pojazd</p><p className="text-sm font-medium text-emerald-400">{myShift.bus}</p></div>
-                      <div><p className="text-xs text-zinc-500 mb-1">Godziny</p><p className="text-sm font-medium">{myShift.startTime} - {myShift.endTime}</p></div>
-                    </div>
+              <h2 className="text-xl font-medium mb-4 text-zinc-200">Zmiana hasła</h2>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-md">
+                <form onSubmit={handleChangePassword} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-500 mb-1.5">Obecne hasło</label>
+                    <input
+                      required type="password"
+                      value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+                    />
                   </div>
-                  {myShift.pdfUrl && (
-                    <div className="flex flex-col justify-center min-w-[220px]">
-                      <div className="p-5 bg-zinc-950/50 rounded-2xl border border-zinc-800/80 space-y-4">
-                        <div className="flex items-center gap-3"><FileText className="w-8 h-8 text-zinc-400" /><div><p className="text-xs text-zinc-500">Rozkład jazdy</p><p className="text-xs font-medium text-zinc-400">Pobierz załącznik</p></div></div>
-                        {/* PUNKT 4: pobieranie chronionego pliku przez authFetch + blob, nie zwykły <a href> */}
-                        <button
-                          onClick={() => downloadProtectedFile(`${API_URL}${myShift.pdfUrl}`)}
-                          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-zinc-100 hover:bg-white text-zinc-900 rounded-xl text-sm font-medium transition-colors"
-                        >
-                          <Download className="w-4 h-4" /> Otwórz PDF
-                        </button>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-500 mb-1.5">Nowe hasło (min. 6 znaków)</label>
+                    <input
+                      required type="password" minLength={6}
+                      value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+                    />
+                  </div>
+                  {changePasswordMsg && (
+                    <p className="text-sm text-zinc-300">{changePasswordMsg}</p>
+                  )}
+                  <button type="submit" className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm">
+                    Zmień hasło
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* WIDOK KIEROWCY */}
+          {user.role === 'driver' && !showChangePassword && activeTab === 'dashboard' && (
+            <div className="animate-in fade-in duration-500 space-y-6">
+              <div>
+                <h2 className="text-xl font-medium mb-4 text-zinc-200">Bieżąca dyspozycja</h2>
+                {myShift ? (
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row gap-8 justify-between">
+                    <div className="space-y-6 w-full">
+                      <div className="flex items-center gap-4">
+                        <div className="h-14 w-14 bg-zinc-100 text-zinc-950 rounded-2xl flex items-center justify-center text-2xl font-bold">{myShift.line}</div>
+                        <div><p className="text-sm text-zinc-500">Brygada</p><h3 className="text-xl font-medium text-zinc-100">{myShift.brigade}</h3></div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 bg-zinc-950/50 p-4 rounded-2xl border border-zinc-800/50">
+                        <div><p className="text-xs text-zinc-500 mb-1">Pojazd</p><p className="text-sm font-medium text-emerald-400">{myShift.bus}</p></div>
+                        <div><p className="text-xs text-zinc-500 mb-1">Godziny</p><p className="text-sm font-medium">{myShift.startTime} - {myShift.endTime}</p></div>
                       </div>
                     </div>
-                  )}
+                    {myShift.pdfUrl && (
+                      <div className="flex flex-col justify-center min-w-[220px]">
+                        <div className="p-5 bg-zinc-950/50 rounded-2xl border border-zinc-800/80 space-y-4">
+                          <div className="flex items-center gap-3">
+                            <FileText className="w-8 h-8 text-zinc-400" />
+                            <div><p className="text-xs text-zinc-500">Rozkład jazdy</p><p className="text-xs font-medium text-zinc-400">Pobierz załącznik</p></div>
+                          </div>
+                          <button
+                            onClick={() => downloadProtectedFile(`${API_URL}${myShift.pdfUrl}`)}
+                            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-zinc-100 hover:bg-white text-zinc-900 rounded-xl text-sm font-medium transition-colors"
+                          >
+                            <Download className="w-4 h-4" /> Otwórz PDF
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 text-center text-zinc-500 text-sm">
+                    Wolne! Dyspozytor nie przypisał Ci jeszcze żadnej służby na dzisiaj.
+                  </div>
+                )}
+              </div>
+
+              {/* 2. HISTORIA SŁUŻB */}
+              {shiftHistory.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-medium mb-4 text-zinc-200">Historia służb</h2>
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
+                    <div className="divide-y divide-zinc-800/60">
+                      {shiftHistory.map(s => (
+                        <div key={s.id} className="px-6 py-4 flex items-center justify-between hover:bg-zinc-800/20 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 bg-zinc-800 text-zinc-100 rounded-xl flex items-center justify-center font-bold text-sm">
+                              {s.line}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-zinc-200">Brygada {s.brigade}</p>
+                              <p className="text-xs text-zinc-500">{s.startTime} – {s.endTime} | Wóz: {s.bus}</p>
+                            </div>
+                          </div>
+                          <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+                            s.status === 'completed'
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              : 'bg-zinc-800 text-zinc-500'
+                          }`}>
+                            {s.status === 'completed' ? 'Zakończona' : 'Anulowana'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 text-center text-zinc-500 text-sm">Wolne! Dyspozytor nie przypisał Ci jeszcze żadnej służby na dzisiaj.</div>
               )}
             </div>
           )}
 
-          {user.role === 'driver' && activeTab === 'report' && (
+          {user.role === 'driver' && !showChangePassword && activeTab === 'report' && (
             <div className="animate-in fade-in duration-500">
-               <h2 className="text-xl font-medium mb-4 text-zinc-200">Złożenie rozliczenia</h2>
-               <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-10 text-center">
+              <h2 className="text-xl font-medium mb-4 text-zinc-200">Złożenie rozliczenia</h2>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-10 text-center">
                 {isUploaded ? (
                   <div className="space-y-4 py-8">
                     <div className="mx-auto w-16 h-16 bg-emerald-400/10 text-emerald-400 rounded-full flex items-center justify-center mb-4"><CheckCircle className="w-8 h-8" /></div>
@@ -715,31 +846,43 @@ export default function App() {
                         <p className="text-sm font-medium text-zinc-300">{driverReportFile ? driverReportFile.name : "Wybierz plik PDF"}</p>
                       </div>
                     </div>
-                    {/* POPRAWKA: usunięto || !myShift — kierowca może wysłać raport nawet bez aktywnej służby */}
-                    <button onClick={submitDriverReport} disabled={!driverReportFile} className="w-full py-3.5 bg-zinc-100 hover:bg-white text-zinc-900 disabled:bg-zinc-800 disabled:text-zinc-600 rounded-xl text-sm font-medium">Wyślij raport</button>
+                    <button onClick={submitDriverReport} disabled={!driverReportFile} className="w-full py-3.5 bg-zinc-100 hover:bg-white text-zinc-900 disabled:bg-zinc-800 disabled:text-zinc-600 rounded-xl text-sm font-medium">
+                      Wyślij raport
+                    </button>
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          {user.role === 'driver' && activeTab === 'fleet' && (
+          {user.role === 'driver' && !showChangePassword && activeTab === 'fleet' && (
             <FleetView isAdmin={false} {...fleetViewProps} />
           )}
 
-          {user.role === 'admin' && (
+          {/* PANEL ADMINA */}
+          {user.role === 'admin' && !showChangePassword && (
             <div className="space-y-6 animate-in fade-in duration-500">
               <div className="flex gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-fit overflow-x-auto">
-                <button onClick={() => setAdminSubTab('assign')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'assign' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Plus className="w-4 h-4" /> Wystaw Służbę</button>
-                <button onClick={() => setAdminSubTab('reports')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'reports' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><FileCheck className="w-4 h-4" /> Raporty</button>
-                <button onClick={() => setAdminSubTab('crew')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'crew' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Users className="w-4 h-4" /> Załoga</button>
-                <button onClick={() => { setAdminSubTab('fleet'); fetchFleet(); fetchDrivers(); }} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'fleet' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Truck className="w-4 h-4" /> Tabor</button>
+                <button onClick={() => setAdminSubTab('assign')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'assign' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                  <Plus className="w-4 h-4" /> Wystaw Służbę
+                </button>
+                <button onClick={() => setAdminSubTab('reports')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'reports' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                  <FileCheck className="w-4 h-4" /> Raporty
+                </button>
+                <button onClick={() => setAdminSubTab('crew')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'crew' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                  <Users className="w-4 h-4" /> Załoga
+                </button>
+                <button onClick={() => { setAdminSubTab('fleet'); fetchFleet(); fetchDrivers(); }} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'fleet' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                  <Truck className="w-4 h-4" /> Tabor
+                </button>
               </div>
 
               {adminSubTab === 'crew' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 h-fit">
-                    <h2 className="text-xl font-medium text-zinc-200 mb-4 flex items-center gap-2"><UserPlus className="w-5 h-5 text-emerald-400" /> Dodaj kierowcę</h2>
+                    <h2 className="text-xl font-medium text-zinc-200 mb-4 flex items-center gap-2">
+                      <UserPlus className="w-5 h-5 text-emerald-400" /> Dodaj kierowcę
+                    </h2>
                     {newDriverSuccess ? (
                       <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-sm text-center">Konto zostało pomyślnie utworzone!</div>
                     ) : (
@@ -767,13 +910,23 @@ export default function App() {
                       {driversList.length === 0 ? (
                         <p className="text-sm text-zinc-500">Brak zarejestrowanych kierowców. Stwórz pierwsze konto.</p>
                       ) : (
+                        // 1. LISTA KIEROWCÓW Z PRZYCISKIEM USUWANIA
                         driversList.map(d => (
                           <div key={d.id} className="flex justify-between items-center p-3 bg-zinc-950 border border-zinc-800/80 rounded-xl">
                             <div>
                               <p className="font-medium text-sm text-zinc-200">{d.displayName}</p>
-                              <p className="text-xs text-zinc-500">ID: {d.login}</p>
+                              <p className="text-xs text-zinc-500">Login: {d.login}</p>
                             </div>
-                            <span className="px-2 py-1 bg-zinc-800 text-zinc-400 rounded-md text-xs font-medium">Kierowca</span>
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-1 bg-zinc-800 text-zinc-400 rounded-md text-xs font-medium">Kierowca</span>
+                              <button
+                                onClick={() => handleDeleteDriver(d.id)}
+                                className="p-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-colors"
+                                title="Usuń kierowcę"
+                              >
+                                <UserX className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         ))
                       )}
@@ -786,13 +939,16 @@ export default function App() {
                 <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8">
                   <h2 className="text-xl font-medium text-zinc-200 mb-6">Kreator dyspozycji</h2>
                   {assignSuccess ? (
-                    <div className="py-12 flex flex-col items-center text-center"><div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mb-4"><CheckCircle className="w-8 h-8" /></div><h3 className="text-lg font-medium text-white">Służba przypisana poprawnie!</h3></div>
+                    <div className="py-12 flex flex-col items-center text-center">
+                      <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mb-4"><CheckCircle className="w-8 h-8" /></div>
+                      <h3 className="text-lg font-medium text-white">Służba przypisana poprawnie!</h3>
+                    </div>
                   ) : (
                     <form onSubmit={handleAssignShift} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Wybierz Kierowcę (Z bazy załogi)</label>
+                            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Wybierz Kierowcę</label>
                             <select required value={assignDriverId} onChange={(e) => setAssignDriverId(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50">
                               <option value="">-- Kto dzisiaj jeździ? --</option>
                               {driversList.map(d => (
@@ -807,7 +963,6 @@ export default function App() {
                           </div>
                           <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Przydziel Wóz</label><input required type="text" placeholder="Solaris U18 (#421)" value={assignBus} onChange={(e) => setAssignBus(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none" /></div>
                         </div>
-
                         <div className="space-y-4 flex flex-col">
                           <div className="grid grid-cols-2 gap-4">
                             <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Rozpoczęcie</label><input required type="time" value={assignStart} onChange={(e) => setAssignStart(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-400 text-sm focus:outline-none" /></div>
@@ -817,12 +972,19 @@ export default function App() {
                             <label className="block text-xs font-medium text-zinc-500 mb-1.5">Rozkład Jazdy (PDF)</label>
                             <div className="relative h-[115px] border-2 border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-950/50 rounded-xl flex items-center justify-center group cursor-pointer">
                               <input required type="file" accept=".pdf" onChange={(e) => setAssignPdf(e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                              <div className="flex flex-col items-center gap-2 text-center px-4"><FileUp className="w-6 h-6 text-zinc-600 group-hover:text-emerald-400" /><span className="text-xs font-medium text-zinc-400 truncate max-w-full">{assignPdf ? assignPdf.name : "Wgraj rozkład .pdf"}</span></div>
+                              <div className="flex flex-col items-center gap-2 text-center px-4">
+                                <FileUp className="w-6 h-6 text-zinc-600 group-hover:text-emerald-400" />
+                                <span className="text-xs font-medium text-zinc-400 truncate max-w-full">{assignPdf ? assignPdf.name : "Wgraj rozkład .pdf"}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                      <div className="pt-4 border-t border-zinc-800/80"><button type="submit" disabled={driversList.length === 0} className="px-8 py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm flex items-center gap-2 disabled:bg-zinc-800 disabled:text-zinc-600"><Plus className="w-4 h-4" /> Wyślij dyspozycję</button></div>
+                      <div className="pt-4 border-t border-zinc-800/80">
+                        <button type="submit" disabled={driversList.length === 0} className="px-8 py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm flex items-center gap-2 disabled:bg-zinc-800 disabled:text-zinc-600">
+                          <Plus className="w-4 h-4" /> Wyślij dyspozycję
+                        </button>
+                      </div>
                     </form>
                   )}
 
@@ -863,7 +1025,6 @@ export default function App() {
                             <div><p className="font-medium text-zinc-200">{report.driverName}</p><p className="text-xs text-zinc-500">Wysłano: {report.date}</p></div>
                           </div>
                           <div className="flex items-center gap-3 w-full lg:w-auto">
-                            {/* PUNKT 4: pobieranie chronionego pliku przez authFetch + blob, nie zwykły <a href> */}
                             <button
                               onClick={() => downloadProtectedFile(`${API_URL}${report.pdfUrl}`)}
                               className="flex items-center gap-2 px-4 py-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-zinc-300"
@@ -887,6 +1048,40 @@ export default function App() {
               )}
             </div>
           )}
+
+          {/* ZMIANA HASŁA DLA ADMINA */}
+          {user.role === 'admin' && showChangePassword && (
+            <div className="animate-in fade-in duration-500">
+              <h2 className="text-xl font-medium mb-4 text-zinc-200">Zmiana hasła</h2>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-md">
+                <form onSubmit={handleChangePassword} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-500 mb-1.5">Obecne hasło</label>
+                    <input
+                      required type="password"
+                      value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-500 mb-1.5">Nowe hasło (min. 6 znaków)</label>
+                    <input
+                      required type="password" minLength={6}
+                      value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+                    />
+                  </div>
+                  {changePasswordMsg && (
+                    <p className="text-sm text-zinc-300">{changePasswordMsg}</p>
+                  )}
+                  <button type="submit" className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm">
+                    Zmień hasło
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
         </main>
       </div>
     </div>
