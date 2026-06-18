@@ -503,6 +503,46 @@ const FleetView = ({
 };
 
 // ---------------------------------------------------------
+// ChangePasswordForm — wyniesiony POZA App (naprawia biały ekran)
+// ---------------------------------------------------------
+const ChangePasswordForm = ({
+  currentPassword, setCurrentPassword,
+  newPassword, setNewPassword,
+  changePasswordMsg,
+  onSubmit,
+}) => (
+  <div className="animate-in fade-in duration-500">
+    <h2 className="text-xl font-medium mb-4 text-zinc-200">Zmiana hasła</h2>
+    <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-md">
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div>
+          <label className="block text-xs font-medium text-zinc-500 mb-1.5">Obecne hasło</label>
+          <input
+            required type="password"
+            value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
+            className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-zinc-500 mb-1.5">Nowe hasło (min. 6 znaków)</label>
+          <input
+            required type="password" minLength={6}
+            value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+            className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+          />
+        </div>
+        {changePasswordMsg && (
+          <p className="text-sm text-zinc-300">{changePasswordMsg}</p>
+        )}
+        <button type="submit" className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm">
+          Zmień hasło
+        </button>
+      </form>
+    </div>
+  </div>
+);
+
+// ---------------------------------------------------------
 // GŁÓWNY KOMPONENT
 // ---------------------------------------------------------
 export default function App() {
@@ -511,6 +551,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [adminSubTab, setAdminSubTab] = useState('assign');
   const [loginError, setLoginError] = useState('');
+  // POPRAWKA: isLoading brakowało jako stan
+  const [isLoading, setIsLoading] = useState(false);
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -617,6 +659,7 @@ export default function App() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
+    setIsLoading(true);
 
     try {
       const res = await fetch(`${API_URL}/api/login`, {
@@ -641,6 +684,8 @@ export default function App() {
       }
     } catch (error) {
       setLoginError("Błąd łączenia z serwerem. Upewnij się, że backend działa.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -772,39 +817,6 @@ export default function App() {
     } catch (err) { console.error(err); }
   };
 
-  // Formularz zmiany hasła — współdzielony
-  const ChangePasswordForm = () => (
-    <div className="animate-in fade-in duration-500">
-      <h2 className="text-xl font-medium mb-4 text-zinc-200">Zmiana hasła</h2>
-      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-md">
-        <form onSubmit={handleChangePassword} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Obecne hasło</label>
-            <input
-              required type="password"
-              value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Nowe hasło (min. 6 znaków)</label>
-            <input
-              required type="password" minLength={6}
-              value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
-            />
-          </div>
-          {changePasswordMsg && (
-            <p className="text-sm text-zinc-300">{changePasswordMsg}</p>
-          )}
-          <button type="submit" className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm">
-            Zmień hasło
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-
   // ---------------------------------------------------------
   // EKRAN LOGOWANIA
   // ---------------------------------------------------------
@@ -845,10 +857,9 @@ export default function App() {
             <button 
               type="submit" 
               disabled={isLoading}
-              className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl transition-colors text-sm mt-2 shadow-lg"
+              className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl transition-colors text-sm mt-2 shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
             >
-               {isLoading ? 'Łączenie...' : 'Zaloguj się'}
-              Zaloguj się
+              {isLoading ? 'Łączenie...' : 'Zaloguj się'}
             </button>
           </form>
         </div>
@@ -914,7 +925,17 @@ export default function App() {
 
         <main className="flex-1 space-y-6">
 
-          {showChangePassword && <ChangePasswordForm />}
+          {/* POPRAWKA: ChangePasswordForm jest teraz zewnętrznym komponentem — nie traci stanu */}
+          {showChangePassword && (
+            <ChangePasswordForm
+              currentPassword={currentPassword}
+              setCurrentPassword={setCurrentPassword}
+              newPassword={newPassword}
+              setNewPassword={setNewPassword}
+              changePasswordMsg={changePasswordMsg}
+              onSubmit={handleChangePassword}
+            />
+          )}
 
           {/* WIDOK KIEROWCY */}
           {user.role === 'driver' && !showChangePassword && activeTab === 'dashboard' && (
