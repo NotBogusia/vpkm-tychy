@@ -815,7 +815,7 @@ export default function App() {
           className="absolute inset-0 bg-cover bg-center scale-105"
           style={{ backgroundImage: `url('/bg-login.jpg')` }}
         />
-        <div className="absolute inset-0 bg-zinc-950/75 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-zinc-950/20 backdrop-blur-sm" />
 
         <div className="relative z-10 w-full max-w-md bg-zinc-900/60 p-8 sm:p-10 rounded-3xl border border-zinc-800/80 backdrop-blur-md shadow-2xl">
           <div className="text-center mb-8">
