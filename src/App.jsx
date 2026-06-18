@@ -19,6 +19,219 @@ const authFetch = (url, options = {}) => {
   });
 };
 
+// ─────────────────────────────────────────────────────────
+// FleetView wyniesiony POZA App, żeby React nie remontował
+// go przy każdym re-renderze (powodowało utratę fokusa).
+// Wszystkie potrzebne dane i handlery przekazujemy przez props.
+// ─────────────────────────────────────────────────────────
+const FleetView = ({
+  isAdmin,
+  fleet,
+  driversList,
+  fleetEditId,
+  fleetEditBusNumber,
+  fleetEditModel,
+  fleetEditDriverId,
+  showAddVehicle,
+  newBusNumber,
+  newBusModel,
+  newBusDriverId,
+  setFleetEditBusNumber,
+  setFleetEditModel,
+  setFleetEditDriverId,
+  setFleetEditId,
+  setShowAddVehicle,
+  setNewBusNumber,
+  setNewBusModel,
+  setNewBusDriverId,
+  handleAddVehicle,
+  startEditVehicle,
+  handleSaveVehicle,
+  handleUnassignDriver,
+  handleDeleteVehicle,
+}) => (
+  <div className="animate-in fade-in duration-500 space-y-4">
+    <div className="flex items-center justify-between">
+      <h2 className="text-xl font-medium text-zinc-200">Tabor</h2>
+      {isAdmin && (
+        <button
+          onClick={() => setShowAddVehicle(v => !v)}
+          className="flex items-center gap-2 px-4 py-2 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors"
+        >
+          <Plus className="w-4 h-4" /> Dodaj pojazd
+        </button>
+      )}
+    </div>
+
+    {/* Formularz dodawania pojazdu */}
+    {isAdmin && showAddVehicle && (
+      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+        <h3 className="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2">
+          <Truck className="w-4 h-4 text-emerald-400" /> Nowy pojazd
+        </h3>
+        <form onSubmit={handleAddVehicle} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Nr taborowy</label>
+            <input
+              required type="text" placeholder="np. 421"
+              value={newBusNumber} onChange={(e) => setNewBusNumber(e.target.value)}
+              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Model</label>
+            <input
+              required type="text" placeholder="np. Solaris Urbino 18"
+              value={newBusModel} onChange={(e) => setNewBusModel(e.target.value)}
+              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Przypisany kierowca</label>
+            <select
+              value={newBusDriverId} onChange={(e) => setNewBusDriverId(e.target.value)}
+              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+            >
+              <option value="">-- Brak --</option>
+              {driversList.map(d => (
+                <option key={d.id} value={d.id}>{d.displayName}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <button type="submit" className="flex-1 py-2.5 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors">
+              Dodaj
+            </button>
+            <button type="button" onClick={() => setShowAddVehicle(false)} className="p-2.5 bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-xl transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </form>
+      </div>
+    )}
+
+    {/* Lista pojazdów */}
+    <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
+      {fleet.length === 0 ? (
+        <div className="p-10 text-center text-zinc-500 text-sm">
+          Brak pojazdów w taborze.{isAdmin && ' Dodaj pierwszy wóz przyciskiem powyżej.'}
+        </div>
+      ) : (
+        <div className="divide-y divide-zinc-800/60">
+          {/* Nagłówek tabeli */}
+          <div className="hidden md:grid md:grid-cols-12 px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">
+            <div className="col-span-2">Nr tab.</div>
+            <div className="col-span-4">Model</div>
+            <div className="col-span-4">Przypisany kierowca</div>
+            {isAdmin && <div className="col-span-2 text-right">Akcje</div>}
+          </div>
+
+          {fleet.map((vehicle) => (
+            <div key={vehicle.id} className="px-6 py-4 hover:bg-zinc-800/20 transition-colors">
+              {fleetEditId === vehicle.id ? (
+                /* Tryb edycji */
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                  <div className="md:col-span-2">
+                    <input
+                      type="text" value={fleetEditBusNumber}
+                      onChange={(e) => setFleetEditBusNumber(e.target.value)}
+                      className="w-full px-3 py-2 bg-zinc-950 border border-emerald-500/40 rounded-xl text-zinc-200 text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div className="md:col-span-4">
+                    <input
+                      type="text" value={fleetEditModel}
+                      onChange={(e) => setFleetEditModel(e.target.value)}
+                      className="w-full px-3 py-2 bg-zinc-950 border border-emerald-500/40 rounded-xl text-zinc-200 text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div className="md:col-span-4">
+                    <select
+                      value={fleetEditDriverId}
+                      onChange={(e) => setFleetEditDriverId(e.target.value)}
+                      className="w-full px-3 py-2 bg-zinc-950 border border-emerald-500/40 rounded-xl text-zinc-200 text-sm focus:outline-none"
+                    >
+                      <option value="">-- Brak --</option>
+                      {driversList.map(d => (
+                        <option key={d.id} value={d.id}>{d.displayName}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="md:col-span-2 flex gap-2 justify-end">
+                    <button
+                      onClick={() => handleSaveVehicle(vehicle.id)}
+                      className="p-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/20 transition-colors"
+                    >
+                      <Save className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setFleetEditId(null)}
+                      className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:bg-zinc-700 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Tryb widoku */
+                <div className="grid grid-cols-12 gap-3 items-center">
+                  <div className="col-span-5 md:col-span-2">
+                    <span className="inline-flex items-center justify-center w-12 h-10 bg-zinc-950 border border-zinc-800 rounded-xl text-emerald-400 font-bold text-sm">
+                      {vehicle.busNumber}
+                    </span>
+                  </div>
+                  <div className="col-span-7 md:col-span-4">
+                    <p className="text-sm font-medium text-zinc-200">{vehicle.model}</p>
+                  </div>
+                  <div className="col-span-9 md:col-span-4 flex items-center gap-2">
+                    {vehicle.assignedDriverId ? (
+                      <>
+                        <div className="w-6 h-6 bg-zinc-800 rounded-full flex items-center justify-center text-[10px] font-medium text-emerald-400 border border-zinc-700">
+                          {vehicle.assignedDriverName.charAt(0)}
+                        </div>
+                        <span className="text-sm text-zinc-300">{vehicle.assignedDriverName}</span>
+                      </>
+                    ) : (
+                      <span className="text-xs text-zinc-600 italic">Nieprzypisany</span>
+                    )}
+                  </div>
+                  {isAdmin && (
+                    <div className="col-span-3 md:col-span-2 flex gap-2 justify-end">
+                      <button
+                        onClick={() => startEditVehicle(vehicle)}
+                        className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
+                        title="Edytuj"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      {vehicle.assignedDriverId && (
+                        <button
+                          onClick={() => handleUnassignDriver(vehicle)}
+                          className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+                          title="Anuluj przypisanie kierowcy"
+                        >
+                          <UserX className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDeleteVehicle(vehicle.id)}
+                        className="p-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-colors"
+                        title="Usuń pojazd"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
@@ -158,13 +371,13 @@ export default function App() {
   };
 
   const submitDriverReport = async () => {
-    if (!driverReportFile || !myShift) return;
+    if (!driverReportFile) return;
 
     const formData = new FormData();
     formData.append('report_pdf', driverReportFile);
     formData.append('driverId', user.id);
     formData.append('driverName', user.name);
-    formData.append('line', myShift.line);
+    formData.append('line', myShift?.line ?? 'brak');
 
     try {
       const res = await authFetch(`${API_URL}/api/reports`, { method: 'POST', body: formData });
@@ -317,189 +530,32 @@ export default function App() {
     } catch (err) { console.error(err); }
   };
 
-  // --- WIDOK TABORU (WSPÓLNY DLA KIEROWCY I ADMINA) ---
-  const FleetView = ({ isAdmin }) => (
-    <div className="animate-in fade-in duration-500 space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-medium text-zinc-200">Tabor</h2>
-        {isAdmin && (
-          <button
-            onClick={() => setShowAddVehicle(v => !v)}
-            className="flex items-center gap-2 px-4 py-2 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Dodaj pojazd
-          </button>
-        )}
-      </div>
-
-      {/* Formularz dodawania pojazdu */}
-      {isAdmin && showAddVehicle && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
-          <h3 className="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2">
-            <Truck className="w-4 h-4 text-emerald-400" /> Nowy pojazd
-          </h3>
-          <form onSubmit={handleAddVehicle} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div>
-              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Nr taborowy</label>
-              <input
-                required type="text" placeholder="np. 421"
-                value={newBusNumber} onChange={(e) => setNewBusNumber(e.target.value)}
-                className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Model</label>
-              <input
-                required type="text" placeholder="np. Solaris Urbino 18"
-                value={newBusModel} onChange={(e) => setNewBusModel(e.target.value)}
-                className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Przypisany kierowca</label>
-              <select
-                value={newBusDriverId} onChange={(e) => setNewBusDriverId(e.target.value)}
-                className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
-              >
-                <option value="">-- Brak --</option>
-                {driversList.map(d => (
-                  <option key={d.id} value={d.id}>{d.displayName}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <button type="submit" className="flex-1 py-2.5 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors">
-                Dodaj
-              </button>
-              <button type="button" onClick={() => setShowAddVehicle(false)} className="p-2.5 bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-xl transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Lista pojazdów */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
-        {fleet.length === 0 ? (
-          <div className="p-10 text-center text-zinc-500 text-sm">
-            Brak pojazdów w taborze.{isAdmin && ' Dodaj pierwszy wóz przyciskiem powyżej.'}
-          </div>
-        ) : (
-          <div className="divide-y divide-zinc-800/60">
-            {/* Nagłówek tabeli */}
-            <div className="hidden md:grid md:grid-cols-12 px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-              <div className="col-span-2">Nr tab.</div>
-              <div className="col-span-4">Model</div>
-              <div className="col-span-4">Przypisany kierowca</div>
-              {isAdmin && <div className="col-span-2 text-right">Akcje</div>}
-            </div>
-
-            {fleet.map((vehicle) => (
-              <div key={vehicle.id} className="px-6 py-4 hover:bg-zinc-800/20 transition-colors">
-                {fleetEditId === vehicle.id ? (
-                  /* Tryb edycji */
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-                    <div className="md:col-span-2">
-                      <input
-                        type="text" value={fleetEditBusNumber}
-                        onChange={(e) => setFleetEditBusNumber(e.target.value)}
-                        className="w-full px-3 py-2 bg-zinc-950 border border-emerald-500/40 rounded-xl text-zinc-200 text-sm focus:outline-none"
-                      />
-                    </div>
-                    <div className="md:col-span-4">
-                      <input
-                        type="text" value={fleetEditModel}
-                        onChange={(e) => setFleetEditModel(e.target.value)}
-                        className="w-full px-3 py-2 bg-zinc-950 border border-emerald-500/40 rounded-xl text-zinc-200 text-sm focus:outline-none"
-                      />
-                    </div>
-                    <div className="md:col-span-4">
-                      <select
-                        value={fleetEditDriverId}
-                        onChange={(e) => setFleetEditDriverId(e.target.value)}
-                        className="w-full px-3 py-2 bg-zinc-950 border border-emerald-500/40 rounded-xl text-zinc-200 text-sm focus:outline-none"
-                      >
-                        <option value="">-- Brak --</option>
-                        {driversList.map(d => (
-                          <option key={d.id} value={d.id}>{d.displayName}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="md:col-span-2 flex gap-2 justify-end">
-                      <button
-                        onClick={() => handleSaveVehicle(vehicle.id)}
-                        className="p-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/20 transition-colors"
-                      >
-                        <Save className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setFleetEditId(null)}
-                        className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:bg-zinc-700 transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  /* Tryb widoku */
-                  <div className="grid grid-cols-12 gap-3 items-center">
-                    <div className="col-span-5 md:col-span-2">
-                      <span className="inline-flex items-center justify-center w-12 h-10 bg-zinc-950 border border-zinc-800 rounded-xl text-emerald-400 font-bold text-sm">
-                        {vehicle.busNumber}
-                      </span>
-                    </div>
-                    <div className="col-span-7 md:col-span-4">
-                      <p className="text-sm font-medium text-zinc-200">{vehicle.model}</p>
-                    </div>
-                    <div className="col-span-9 md:col-span-4 flex items-center gap-2">
-                      {vehicle.assignedDriverId ? (
-                        <>
-                          <div className="w-6 h-6 bg-zinc-800 rounded-full flex items-center justify-center text-[10px] font-medium text-emerald-400 border border-zinc-700">
-                            {vehicle.assignedDriverName.charAt(0)}
-                          </div>
-                          <span className="text-sm text-zinc-300">{vehicle.assignedDriverName}</span>
-                        </>
-                      ) : (
-                        <span className="text-xs text-zinc-600 italic">Nieprzypisany</span>
-                      )}
-                    </div>
-                    {isAdmin && (
-                      <div className="col-span-3 md:col-span-2 flex gap-2 justify-end">
-                        <button
-                          onClick={() => startEditVehicle(vehicle)}
-                          className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
-                          title="Edytuj"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        {vehicle.assignedDriverId && (
-                          <button
-                            onClick={() => handleUnassignDriver(vehicle)}
-                            className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
-                            title="Anuluj przypisanie kierowcy"
-                          >
-                            <UserX className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDeleteVehicle(vehicle.id)}
-                          className="p-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-colors"
-                          title="Usuń pojazd"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  // Wspólne props dla FleetView
+  const fleetViewProps = {
+    fleet,
+    driversList,
+    fleetEditId,
+    fleetEditBusNumber,
+    fleetEditModel,
+    fleetEditDriverId,
+    showAddVehicle,
+    newBusNumber,
+    newBusModel,
+    newBusDriverId,
+    setFleetEditBusNumber,
+    setFleetEditModel,
+    setFleetEditDriverId,
+    setFleetEditId,
+    setShowAddVehicle,
+    setNewBusNumber,
+    setNewBusModel,
+    setNewBusDriverId,
+    handleAddVehicle,
+    startEditVehicle,
+    handleSaveVehicle,
+    handleUnassignDriver,
+    handleDeleteVehicle,
+  };
 
   // --- EKRAN LOGOWANIA ---
   if (!isLoggedIn) {
@@ -626,7 +682,8 @@ export default function App() {
                         <p className="text-sm font-medium text-zinc-300">{driverReportFile ? driverReportFile.name : "Wybierz plik PDF"}</p>
                       </div>
                     </div>
-                    <button onClick={submitDriverReport} disabled={!driverReportFile || !myShift} className="w-full py-3.5 bg-zinc-100 hover:bg-white text-zinc-900 disabled:bg-zinc-800 disabled:text-zinc-600 rounded-xl text-sm font-medium">Wyślij raport</button>
+                    {/* POPRAWKA: usunięto || !myShift — kierowca może wysłać raport nawet bez aktywnej służby */}
+                    <button onClick={submitDriverReport} disabled={!driverReportFile} className="w-full py-3.5 bg-zinc-100 hover:bg-white text-zinc-900 disabled:bg-zinc-800 disabled:text-zinc-600 rounded-xl text-sm font-medium">Wyślij raport</button>
                   </div>
                 )}
               </div>
@@ -634,7 +691,7 @@ export default function App() {
           )}
 
           {user.role === 'driver' && activeTab === 'fleet' && (
-            <FleetView isAdmin={false} />
+            <FleetView isAdmin={false} {...fleetViewProps} />
           )}
 
           {user.role === 'admin' && (
@@ -787,7 +844,7 @@ export default function App() {
               )}
 
               {adminSubTab === 'fleet' && (
-                <FleetView isAdmin={true} />
+                <FleetView isAdmin={true} {...fleetViewProps} />
               )}
             </div>
           )}
