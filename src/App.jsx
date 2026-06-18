@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
+
 import { 
   Bus, LogOut, Download, UploadCloud, 
-  FileText, CheckCircle, Plus, FileCheck, XCircle, FileUp, Users, UserPlus, ShieldAlert
+  FileText, CheckCircle, Plus, FileCheck, XCircle, FileUp, Users, UserPlus, ShieldAlert,
+  Pencil, Truck, UserX, Save, X
 } from 'lucide-react';
 
 const API_URL = 'https://vpkm-backend-production.up.railway.app';
 
-// Helper: wysyła zapytanie z tokenem JWT w nagłówku
 const authFetch = (url, options = {}) => {
   const token = localStorage.getItem('vpkm_token');
   return fetch(url, {
@@ -50,6 +51,17 @@ export default function App() {
   const [newDriverName, setNewDriverName] = useState('');
   const [newDriverSuccess, setNewDriverSuccess] = useState(false);
 
+  // --- TABOR ---
+  const [fleet, setFleet] = useState([]);
+  const [fleetEditId, setFleetEditId] = useState(null);
+  const [fleetEditBusNumber, setFleetEditBusNumber] = useState('');
+  const [fleetEditModel, setFleetEditModel] = useState('');
+  const [fleetEditDriverId, setFleetEditDriverId] = useState('');
+  const [showAddVehicle, setShowAddVehicle] = useState(false);
+  const [newBusNumber, setNewBusNumber] = useState('');
+  const [newBusModel, setNewBusModel] = useState('');
+  const [newBusDriverId, setNewBusDriverId] = useState('');
+
   useEffect(() => {
     if (!isLoggedIn || !user) return;
 
@@ -64,8 +76,14 @@ export default function App() {
       fetchDrivers();
       fetchActiveShifts();
       if (adminSubTab === 'reports') fetchReports();
+      if (adminSubTab === 'fleet') fetchFleet();
     }
-  }, [isLoggedIn, user, adminSubTab]);
+
+    if (user.role === 'driver' && activeTab === 'fleet') {
+      fetchFleet();
+      fetchDrivers();
+    }
+  }, [isLoggedIn, user, adminSubTab, activeTab]);
 
   const fetchReports = () => {
     authFetch(`${API_URL}/api/reports/pending`)
@@ -85,6 +103,13 @@ export default function App() {
     authFetch(`${API_URL}/api/shifts`)
       .then(res => res.json())
       .then(data => setActiveShifts(data.shifts || []))
+      .catch(err => console.error(err));
+  };
+
+  const fetchFleet = () => {
+    authFetch(`${API_URL}/api/fleet`)
+      .then(res => res.json())
+      .then(data => setFleet(data))
       .catch(err => console.error(err));
   };
 
@@ -109,7 +134,6 @@ export default function App() {
       const data = await res.json();
 
       if (data.success) {
-        // Zapisujemy token w localStorage
         localStorage.setItem('vpkm_token', data.token);
         setUser({
           id: data.user.id,
@@ -128,7 +152,6 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    // Usuwamy token przy wylogowaniu
     localStorage.removeItem('vpkm_token');
     setIsLoggedIn(false); setUser(null); setDriverReportFile(null); 
     setIsUploaded(false); setEmail(''); setPassword(''); setMyShift(null);
@@ -214,16 +237,287 @@ export default function App() {
     } catch (err) { console.error(err); }
   };
 
+  // --- TABOR: DODAWANIE ---
+  const handleAddVehicle = async (e) => {
+    e.preventDefault();
+    const selectedDriver = driversList.find(d => d.id === newBusDriverId);
+    try {
+      const res = await authFetch(`${API_URL}/api/fleet`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          busNumber: newBusNumber,
+          model: newBusModel,
+          assignedDriverId: newBusDriverId || '',
+          assignedDriverName: selectedDriver ? selectedDriver.displayName : 'Brak'
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNewBusNumber(''); setNewBusModel(''); setNewBusDriverId('');
+        setShowAddVehicle(false);
+        fetchFleet();
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  // --- TABOR: START EDYCJI ---
+  const startEditVehicle = (vehicle) => {
+    setFleetEditId(vehicle.id);
+    setFleetEditBusNumber(vehicle.busNumber);
+    setFleetEditModel(vehicle.model);
+    setFleetEditDriverId(vehicle.assignedDriverId || '');
+  };
+
+  // --- TABOR: ZAPIS EDYCJI ---
+  const handleSaveVehicle = async (id) => {
+    const selectedDriver = driversList.find(d => d.id === fleetEditDriverId);
+    try {
+      const res = await authFetch(`${API_URL}/api/fleet/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          busNumber: fleetEditBusNumber,
+          model: fleetEditModel,
+          assignedDriverId: fleetEditDriverId || '',
+          assignedDriverName: selectedDriver ? selectedDriver.displayName : 'Brak'
+        })
+      });
+      if (res.ok) {
+        setFleetEditId(null);
+        fetchFleet();
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  // --- TABOR: ANULOWANIE PRZYPISANIA KIEROWCY ---
+  const handleUnassignDriver = async (vehicle) => {
+    if (!confirm(`Anulować przypisanie kierowcy do wozu #${vehicle.busNumber}?`)) return;
+    try {
+      await authFetch(`${API_URL}/api/fleet/${vehicle.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          busNumber: vehicle.busNumber,
+          model: vehicle.model,
+          assignedDriverId: '',
+          assignedDriverName: 'Brak'
+        })
+      });
+      fetchFleet();
+    } catch (err) { console.error(err); }
+  };
+
+  // --- TABOR: USUWANIE ---
+  const handleDeleteVehicle = async (id) => {
+    if (!confirm('Usunąć pojazd z taboru?')) return;
+    try {
+      await authFetch(`${API_URL}/api/fleet/${id}`, { method: 'DELETE' });
+      fetchFleet();
+    } catch (err) { console.error(err); }
+  };
+
+  // --- WIDOK TABORU (WSPÓLNY DLA KIEROWCY I ADMINA) ---
+  const FleetView = ({ isAdmin }) => (
+    <div className="animate-in fade-in duration-500 space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-medium text-zinc-200">Tabor</h2>
+        {isAdmin && (
+          <button
+            onClick={() => setShowAddVehicle(v => !v)}
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Dodaj pojazd
+          </button>
+        )}
+      </div>
+
+      {/* Formularz dodawania pojazdu */}
+      {isAdmin && showAddVehicle && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+          <h3 className="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2">
+            <Truck className="w-4 h-4 text-emerald-400" /> Nowy pojazd
+          </h3>
+          <form onSubmit={handleAddVehicle} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Nr taborowy</label>
+              <input
+                required type="text" placeholder="np. 421"
+                value={newBusNumber} onChange={(e) => setNewBusNumber(e.target.value)}
+                className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Model</label>
+              <input
+                required type="text" placeholder="np. Solaris Urbino 18"
+                value={newBusModel} onChange={(e) => setNewBusModel(e.target.value)}
+                className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Przypisany kierowca</label>
+              <select
+                value={newBusDriverId} onChange={(e) => setNewBusDriverId(e.target.value)}
+                className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50"
+              >
+                <option value="">-- Brak --</option>
+                {driversList.map(d => (
+                  <option key={d.id} value={d.id}>{d.displayName}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" className="flex-1 py-2.5 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors">
+                Dodaj
+              </button>
+              <button type="button" onClick={() => setShowAddVehicle(false)} className="p-2.5 bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-xl transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Lista pojazdów */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
+        {fleet.length === 0 ? (
+          <div className="p-10 text-center text-zinc-500 text-sm">
+            Brak pojazdów w taborze.{isAdmin && ' Dodaj pierwszy wóz przyciskiem powyżej.'}
+          </div>
+        ) : (
+          <div className="divide-y divide-zinc-800/60">
+            {/* Nagłówek tabeli */}
+            <div className="hidden md:grid md:grid-cols-12 px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">
+              <div className="col-span-2">Nr tab.</div>
+              <div className="col-span-4">Model</div>
+              <div className="col-span-4">Przypisany kierowca</div>
+              {isAdmin && <div className="col-span-2 text-right">Akcje</div>}
+            </div>
+
+            {fleet.map((vehicle) => (
+              <div key={vehicle.id} className="px-6 py-4 hover:bg-zinc-800/20 transition-colors">
+                {fleetEditId === vehicle.id ? (
+                  /* Tryb edycji */
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                    <div className="md:col-span-2">
+                      <input
+                        type="text" value={fleetEditBusNumber}
+                        onChange={(e) => setFleetEditBusNumber(e.target.value)}
+                        className="w-full px-3 py-2 bg-zinc-950 border border-emerald-500/40 rounded-xl text-zinc-200 text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div className="md:col-span-4">
+                      <input
+                        type="text" value={fleetEditModel}
+                        onChange={(e) => setFleetEditModel(e.target.value)}
+                        className="w-full px-3 py-2 bg-zinc-950 border border-emerald-500/40 rounded-xl text-zinc-200 text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div className="md:col-span-4">
+                      <select
+                        value={fleetEditDriverId}
+                        onChange={(e) => setFleetEditDriverId(e.target.value)}
+                        className="w-full px-3 py-2 bg-zinc-950 border border-emerald-500/40 rounded-xl text-zinc-200 text-sm focus:outline-none"
+                      >
+                        <option value="">-- Brak --</option>
+                        {driversList.map(d => (
+                          <option key={d.id} value={d.id}>{d.displayName}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="md:col-span-2 flex gap-2 justify-end">
+                      <button
+                        onClick={() => handleSaveVehicle(vehicle.id)}
+                        className="p-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/20 transition-colors"
+                      >
+                        <Save className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setFleetEditId(null)}
+                        className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:bg-zinc-700 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Tryb widoku */
+                  <div className="grid grid-cols-12 gap-3 items-center">
+                    <div className="col-span-5 md:col-span-2">
+                      <span className="inline-flex items-center justify-center w-12 h-10 bg-zinc-950 border border-zinc-800 rounded-xl text-emerald-400 font-bold text-sm">
+                        {vehicle.busNumber}
+                      </span>
+                    </div>
+                    <div className="col-span-7 md:col-span-4">
+                      <p className="text-sm font-medium text-zinc-200">{vehicle.model}</p>
+                    </div>
+                    <div className="col-span-9 md:col-span-4 flex items-center gap-2">
+                      {vehicle.assignedDriverId ? (
+                        <>
+                          <div className="w-6 h-6 bg-zinc-800 rounded-full flex items-center justify-center text-[10px] font-medium text-emerald-400 border border-zinc-700">
+                            {vehicle.assignedDriverName.charAt(0)}
+                          </div>
+                          <span className="text-sm text-zinc-300">{vehicle.assignedDriverName}</span>
+                        </>
+                      ) : (
+                        <span className="text-xs text-zinc-600 italic">Nieprzypisany</span>
+                      )}
+                    </div>
+                    {isAdmin && (
+                      <div className="col-span-3 md:col-span-2 flex gap-2 justify-end">
+                        <button
+                          onClick={() => startEditVehicle(vehicle)}
+                          className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
+                          title="Edytuj"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        {vehicle.assignedDriverId && (
+                          <button
+                            onClick={() => handleUnassignDriver(vehicle)}
+                            className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+                            title="Anuluj przypisanie kierowcy"
+                          >
+                            <UserX className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteVehicle(vehicle.id)}
+                          className="p-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-colors"
+                          title="Usuń pojazd"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // --- EKRAN LOGOWANIA ---
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4 font-sans text-zinc-100">
-        <div className="w-full max-w-sm">
-          <div className="text-center mb-10">
-            <div className="inline-flex p-3 bg-zinc-900 rounded-2xl mb-4 border border-zinc-800">
+      <div className="relative min-h-screen bg-zinc-950 flex items-center justify-center p-4 font-sans text-zinc-100 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center scale-105"
+          style={{ backgroundImage: `url('/bg-login.jpg')` }}
+        />
+        <div className="absolute inset-0 bg-zinc-950/75 backdrop-blur-xl" />
+
+        <div className="relative z-10 w-full max-w-md bg-zinc-900/60 p-8 sm:p-10 rounded-3xl border border-zinc-800/80 backdrop-blur-md shadow-2xl">
+          <div className="text-center mb-8">
+            <div className="inline-flex p-3 bg-zinc-950/60 rounded-2xl mb-4 border border-zinc-800/50">
               <Bus className="h-6 w-6 text-emerald-400" />
             </div>
             <h1 className="text-2xl font-semibold tracking-tight">vPKM Tychy</h1>
-            <p className="text-zinc-500 text-sm mt-1">Portal Pracowniczy</p>
+            <p className="text-zinc-400 text-sm mt-1">Portal Pracowniczy</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -232,12 +526,25 @@ export default function App() {
                 <ShieldAlert className="w-4 h-4" /> {loginError}
               </div>
             )}
-            <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:bg-zinc-900 transition-colors text-sm" placeholder="Login z gry" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:bg-zinc-900 transition-colors text-sm" placeholder="Hasło dyspozytorskie" />
-            <button type="submit" className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl transition-colors text-sm mt-2">Zaloguj się</button>
+            <input 
+              type="text" value={email} onChange={(e) => setEmail(e.target.value)} required 
+              className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-emerald-500/40 focus:bg-zinc-950/80 transition-colors text-sm" 
+              placeholder="Login z gry" 
+            />
+            <input 
+              type="password" value={password} onChange={(e) => setPassword(e.target.value)} required 
+              className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-emerald-500/40 focus:bg-zinc-950/80 transition-colors text-sm" 
+              placeholder="Hasło dyspozytorskie" 
+            />
+            <button 
+              type="submit" 
+              className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl transition-colors text-sm mt-2 shadow-lg"
+            >
+              Zaloguj się
+            </button>
           </form>
           
-          <p className="text-xs text-center text-zinc-600 mt-6">Domyślny admin - Login: <b>admin</b> | Hasło: <b>123</b></p>
+          <p className="text-[10px] text-center text-zinc-500 mt-6">Domyślny admin - Login: <b className="text-zinc-400">admin</b> | Hasło: <b className="text-zinc-400">123</b></p>
         </div>
       </div>
     );
@@ -261,6 +568,7 @@ export default function App() {
               <>
                 <button onClick={() => setActiveTab('dashboard')} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'dashboard' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Bus className="h-5 w-5" /></button>
                 <button onClick={() => setActiveTab('report')} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'report' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><FileText className="h-5 w-5" /></button>
+                <button onClick={() => { setActiveTab('fleet'); fetchFleet(); fetchDrivers(); }} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'fleet' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Truck className="h-5 w-5" /></button>
               </>
             )}
             <div className="w-px h-6 bg-zinc-800 my-auto mx-1"></div>
@@ -325,12 +633,17 @@ export default function App() {
             </div>
           )}
 
+          {user.role === 'driver' && activeTab === 'fleet' && (
+            <FleetView isAdmin={false} />
+          )}
+
           {user.role === 'admin' && (
             <div className="space-y-6 animate-in fade-in duration-500">
               <div className="flex gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-fit overflow-x-auto">
                 <button onClick={() => setAdminSubTab('assign')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'assign' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Plus className="w-4 h-4" /> Wystaw Służbę</button>
                 <button onClick={() => setAdminSubTab('reports')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'reports' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><FileCheck className="w-4 h-4" /> Raporty</button>
                 <button onClick={() => setAdminSubTab('crew')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'crew' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Users className="w-4 h-4" /> Załoga</button>
+                <button onClick={() => { setAdminSubTab('fleet'); fetchFleet(); fetchDrivers(); }} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'fleet' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Truck className="w-4 h-4" /> Tabor</button>
               </div>
 
               {adminSubTab === 'crew' && (
@@ -471,6 +784,10 @@ export default function App() {
                     </div>
                   )}
                 </div>
+              )}
+
+              {adminSubTab === 'fleet' && (
+                <FleetView isAdmin={true} />
               )}
             </div>
           )}
