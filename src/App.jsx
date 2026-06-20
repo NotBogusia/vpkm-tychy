@@ -1,4 +1,3 @@
-cat > /mnt/user-data/outputs/App_messages.jsx << 'ENDOFFILE'
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Bus, LogOut, Download, UploadCloud, 
@@ -930,4 +929,3 @@ export default function App() {
     </div>
   );
 }
-ENDOFFILE
