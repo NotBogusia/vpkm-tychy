@@ -834,6 +834,10 @@ export default function App() {
         </header>
 
         <main className="flex-1 space-y-6">
+          <div className="flex items-center gap-3 px-4 py-3 bg-red-500/10 border border-red-500/40 rounded-2xl text-red-400 text-sm font-medium">
+  <span className="flex-shrink-0">⚠️</span>
+  Od dnia 29.06.2026 r. do dnia 31.08.2026 r. obowiązują rozkłady wakacyjne.
+</div>
           {showChangePassword && <ChangePasswordForm currentPassword={currentPassword} setCurrentPassword={setCurrentPassword} newPassword={newPassword} setNewPassword={setNewPassword} changePasswordMsg={changePasswordMsg} onSubmit={handleChangePassword} />}
 
           {user.role === 'driver' && !showChangePassword && activeTab === 'dashboard' && (
