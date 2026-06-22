@@ -3,7 +3,7 @@ import {
   Bus, LogOut, Download, UploadCloud, 
   FileText, CheckCircle, Plus, FileCheck, XCircle, FileUp, Users, UserPlus, ShieldAlert,
   Pencil, Truck, UserX, Save, X, KeyRound, ChevronDown, ChevronUp,
-  Bell, BellRing, Send, Trash2, MessageSquare, BookOpen, ExternalLink, Calendar
+  Bell, BellRing, Send, Trash2, MessageSquare, BookOpen, ExternalLink, Calendar, Image
 } from 'lucide-react';
 
 const API_URL = 'https://vpkm-backend-production.up.railway.app';
@@ -28,160 +28,203 @@ const downloadProtectedFile = async (url) => {
 };
 
 // ---------------------------------------------------------
-// ROZKŁADY — dane statyczne
+// ROZKŁADY
 // ---------------------------------------------------------
 const WEEKEND_LINES = [
-  { label: '2/1 + 254/1',     file: 'weekend_2_1.pdf' },
-  { label: '2/3 + 254/3',     file: 'weekend_2_3.pdf' },
-  { label: '131/1',           file: 'weekend_131_1.pdf' },
-  { label: '137/1',           file: 'weekend_137_1.pdf' },
-  { label: '254/2 + 2/2',     file: 'weekend_254_2.pdf' },
-  { label: '272/1 + 271/1',   file: 'weekend_272_1.pdf' },
-  { label: '273/1',           file: 'weekend_273_1.pdf' },
-  { label: '273/2',           file: 'weekend_273_2.pdf' },
-  { label: '520/1',           file: 'weekend_520_1.pdf' },
-  { label: '531/1',           file: 'weekend_531_1.pdf' },
-  { label: '531/2',           file: 'weekend_531_2.pdf' },
-  { label: '565/1',           file: 'weekend_565_1.pdf' },
+  { label: '2/1 + 254/1', file: 'weekend_2_1.pdf' },
+  { label: '2/3 + 254/3', file: 'weekend_2_3.pdf' },
+  { label: '131/1', file: 'weekend_131_1.pdf' },
+  { label: '137/1', file: 'weekend_137_1.pdf' },
+  { label: '254/2 + 2/2', file: 'weekend_254_2.pdf' },
+  { label: '272/1 + 271/1', file: 'weekend_272_1.pdf' },
+  { label: '273/1', file: 'weekend_273_1.pdf' },
+  { label: '273/2', file: 'weekend_273_2.pdf' },
+  { label: '520/1', file: 'weekend_520_1.pdf' },
+  { label: '531/1', file: 'weekend_531_1.pdf' },
+  { label: '531/2', file: 'weekend_531_2.pdf' },
+  { label: '565/1', file: 'weekend_565_1.pdf' },
 ];
+const WEEKDAY_LINES = [];
 
-// Dni robocze — pliki wgrywane ręcznie przez admina do /public
-// Dodaj tutaj kolejne linie w tym samym formacie gdy będą gotowe
-const WEEKDAY_LINES = [
-  // { label: '2/1', file: 'weekday_2_1.pdf' },
-];
-
-// ---------------------------------------------------------
-// SchedulesView — widok rozkładów
-// ---------------------------------------------------------
 const SchedulesView = () => {
   const [subTab, setSubTab] = useState('weekend');
-
-  const openPdf = (filename) => {
-    // Otwiera PDF z /public — bez pobierania, tylko podgląd w nowej karcie
-    window.open(`/${filename}`, '_blank', 'noopener,noreferrer');
-  };
-
+  const openPdf = (filename) => window.open(`/${filename}`, '_blank', 'noopener,noreferrer');
   const LineRow = ({ label, file }) => (
     <div className="flex items-center justify-between px-6 py-4 hover:bg-zinc-800/20 transition-colors">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-zinc-950 border border-zinc-800 rounded-lg flex items-center justify-center">
-          <FileText className="w-4 h-4 text-emerald-400" />
-        </div>
+        <div className="w-8 h-8 bg-zinc-950 border border-zinc-800 rounded-lg flex items-center justify-center"><FileText className="w-4 h-4 text-emerald-400" /></div>
         <span className="text-sm font-medium text-zinc-200">{label}</span>
       </div>
-      <button
-        onClick={() => openPdf(file)}
-        className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-medium transition-colors border border-zinc-700 hover:border-zinc-600"
-      >
-        <ExternalLink className="w-3.5 h-3.5" />
-        Otwórz
+      <button onClick={() => openPdf(file)} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-medium transition-colors border border-zinc-700">
+        <ExternalLink className="w-3.5 h-3.5" /> Otwórz
       </button>
     </div>
   );
-
   const currentLines = subTab === 'weekend' ? WEEKEND_LINES : WEEKDAY_LINES;
-
   return (
     <div className="animate-in fade-in duration-500 space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-medium text-zinc-200 flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-emerald-400" /> Rozkłady jazdy
-        </h2>
-      </div>
-
-      {/* Pod-zakładki */}
+      <h2 className="text-xl font-medium text-zinc-200 flex items-center gap-2"><BookOpen className="w-5 h-5 text-emerald-400" /> Rozkłady jazdy</h2>
       <div className="flex gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-fit">
-        <button
-          onClick={() => setSubTab('weekend')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${subTab === 'weekend' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-        >
-          <Calendar className="w-4 h-4" /> Weekendowe
-        </button>
-        <button
-          onClick={() => setSubTab('weekday')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${subTab === 'weekday' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-        >
-          <Calendar className="w-4 h-4" /> Dni robocze
-        </button>
+        <button onClick={() => setSubTab('weekend')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${subTab === 'weekend' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Calendar className="w-4 h-4" /> Weekendowe</button>
+        <button onClick={() => setSubTab('weekday')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${subTab === 'weekday' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Calendar className="w-4 h-4" /> Dni robocze</button>
       </div>
-
-      {/* Lista linii */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
-        {/* Nagłówek */}
         <div className="px-6 py-4 border-b border-zinc-800/80 flex items-center justify-between">
-          <h3 className="text-sm font-medium text-zinc-300">
-            {subTab === 'weekend' ? 'Rozkłady weekendowe' : 'Rozkłady — dni robocze'}
-          </h3>
-          <span className="text-xs text-zinc-600">{currentLines.length} {currentLines.length === 1 ? 'linia' : 'linii'}</span>
+          <h3 className="text-sm font-medium text-zinc-300">{subTab === 'weekend' ? 'Rozkłady weekendowe' : 'Rozkłady — dni robocze'}</h3>
+          <span className="text-xs text-zinc-600">{currentLines.length} linii</span>
         </div>
-
         {currentLines.length === 0 ? (
-          <div className="p-12 text-center space-y-2">
-            <FileText className="w-8 h-8 text-zinc-700 mx-auto" />
-            <p className="text-sm text-zinc-500">Brak rozkładów w tej kategorii.</p>
-            <p className="text-xs text-zinc-600">Pliki PDF należy wgrać ręcznie do folderu <code className="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-400">/public</code> na serwerze frontendu.</p>
-          </div>
+          <div className="p-12 text-center space-y-2"><FileText className="w-8 h-8 text-zinc-700 mx-auto" /><p className="text-sm text-zinc-500">Brak rozkładów w tej kategorii.</p></div>
         ) : (
-          <div className="divide-y divide-zinc-800/60">
-            {currentLines.map((line) => (
-              <LineRow key={line.file} label={line.label} file={line.file} />
-            ))}
-          </div>
+          <div className="divide-y divide-zinc-800/60">{currentLines.map((line) => <LineRow key={line.file} label={line.label} file={line.file} />)}</div>
         )}
-      </div>
-
-      {/* Info o wgrywaniu */}
-      <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl px-5 py-4">
-        <p className="text-xs text-zinc-500">
-          <span className="text-zinc-400 font-medium">Jak dodać rozkład?</span>{' '}
-          Wgraj plik PDF do folderu <code className="bg-zinc-800 px-1 py-0.5 rounded text-zinc-400">/public</code> projektu frontendowego,
-          zachowując nazewnictwo: <code className="bg-zinc-800 px-1 py-0.5 rounded text-zinc-400">weekend_[linia].pdf</code> lub <code className="bg-zinc-800 px-1 py-0.5 rounded text-zinc-400">weekday_[linia].pdf</code>.
-          Następnie dodaj wpis w tablicy <code className="bg-zinc-800 px-1 py-0.5 rounded text-zinc-400">WEEKDAY_LINES</code> w kodzie.
-        </p>
       </div>
     </div>
   );
 };
 
-const VEHICLE_TYPES = ['Autobus standardowy','Autobus przegubowy','Autobus midi','Autobus mini','Trolejbus','Tramwaj'];
-const FLEET_TYPES = ['miejski','podmiejski','regionalny','szkolny','turystyczny'];
-const VEHICLE_STATUSES = [
-  { value: 'sprawny', label: 'Sprawny', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
-  { value: 'w_naprawie', label: 'W naprawie', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
-  { value: 'wycofany', label: 'Wycofany', color: 'text-red-400 bg-red-500/10 border-red-500/20' },
-  { value: 'rezerwowy', label: 'Rezerwowy', color: 'text-zinc-400 bg-zinc-800 border-zinc-700' },
+// ---------------------------------------------------------
+// TABOR — zaktualizowane stałe
+// ---------------------------------------------------------
+
+// Rodzaj pojazdu — skrótowy system jak w ZTM
+const VEHICLE_TYPES = [
+  { value: 'CN', label: 'CN — Autobus przegubowy' },
+  { value: 'BN', label: 'BN — Autobus standardowy' },
+  { value: 'AN', label: 'AN — Autobus midi' },
+  { value: 'MN', label: 'MN — Autobus mini' },
+  { value: 'TR', label: 'TR — Tramwaj' },
+  { value: 'TP', label: 'TP — Trolejbus' },
+  { value: 'SP', label: 'SP — Specjalny' },
 ];
+
+const FLEET_TYPES = ['miejski', 'podmiejski', 'regionalny', 'szkolny', 'turystyczny'];
+
+// Zaktualizowane statusy
+const VEHICLE_STATUSES = [
+  { value: 'eksploatowany',    label: 'Eksploatowany',    color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  { value: 'wycofany',         label: 'Wycofany',          color: 'text-zinc-400 bg-zinc-800 border-zinc-700' },
+  { value: 'warsztat',         label: 'Warsztat',          color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+  { value: 'skasowany',        label: 'Skasowany',         color: 'text-red-400 bg-red-500/10 border-red-500/20' },
+  { value: 'pojazd_testowy',   label: 'Pojazd testowy',    color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+  { value: 'specjalny',        label: 'Specjalny',         color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+  { value: 'oczekuje',         label: 'Oczekuje',          color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
+];
+
 const statusBadge = (value) => {
   const s = VEHICLE_STATUSES.find(x => x.value === value) || VEHICLE_STATUSES[0];
   return <span className={`px-2 py-1 rounded-md text-xs font-medium border ${s.color}`}>{s.label}</span>;
 };
-const emptyVehicle = { busNumber: '', brand: '', model: '', vehicleType: '', fleetType: '', status: 'sprawny', yearManufactured: '', registrationNumber: '', assignedDriverId: '', notes: '' };
 
-const FleetForm = ({ values, onChange, driversList, onSubmit, onCancel, submitLabel }) => {
-  const field = (name) => ({ value: values[name], onChange: (e) => onChange(name, e.target.value) });
+// Skrót rodzaju pojazdu do wyświetlania w tabeli
+const vehicleTypeBadge = (value) => {
+  if (!value) return <span className="text-zinc-600 text-xs">—</span>;
+  const type = VEHICLE_TYPES.find(t => t.value === value);
+  return (
+    <span className="px-2 py-1 bg-zinc-900 border border-zinc-700 rounded-md text-xs font-bold text-zinc-300 font-mono">
+      {value}
+    </span>
+  );
+};
+
+const emptyVehicle = {
+  busNumber: '', brand: '', model: '',
+  vehicleType: '', fleetType: '',
+  status: 'eksploatowany',
+  yearManufactured: '', registrationNumber: '',
+  assignedDriverId: '', notes: '',
+  plateImageUrl: ''
+};
+
+// ---------------------------------------------------------
+// FleetForm — zaktualizowany formularz
+// ---------------------------------------------------------
+const FleetForm = ({ values, onChange, driversList, onSubmit, onCancel, submitLabel, onPlateImageChange, plateImagePreview }) => {
+  const field = (name) => ({ value: values[name] || '', onChange: (e) => onChange(name, e.target.value) });
   const inputCls = "w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50";
   const labelCls = "block text-xs font-medium text-zinc-500 mb-1.5";
+
   return (
     <form onSubmit={onSubmit} className="space-y-5">
+      {/* Wiersz 1 — identyfikacja */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div><label className={labelCls}>Nr taborowy *</label><input required type="text" placeholder="np. 421" {...field('busNumber')} className={inputCls} /></div>
         <div><label className={labelCls}>Nr rejestracyjny</label><input type="text" placeholder="np. SY 12345" {...field('registrationNumber')} className={inputCls} /></div>
         <div><label className={labelCls}>Rok produkcji</label><input type="text" placeholder="np. 2019" maxLength={4} {...field('yearManufactured')} className={inputCls} /></div>
       </div>
+
+      {/* Wiersz 2 — marka i model */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div><label className={labelCls}>Marka *</label><input required type="text" placeholder="np. Solaris" {...field('brand')} className={inputCls} /></div>
         <div><label className={labelCls}>Typ / Model *</label><input required type="text" placeholder="np. Urbino 18" {...field('model')} className={inputCls} /></div>
       </div>
+
+      {/* Wiersz 3 — klasyfikacja */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div><label className={labelCls}>Rodzaj pojazdu</label><select {...field('vehicleType')} className={inputCls}><option value="">-- wybierz --</option>{VEHICLE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
-        <div><label className={labelCls}>Typ taboru</label><select {...field('fleetType')} className={inputCls}><option value="">-- wybierz --</option>{FLEET_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
-        <div><label className={labelCls}>Stan</label><select {...field('status')} className={inputCls}>{VEHICLE_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>
+        <div>
+          <label className={labelCls}>Rodzaj pojazdu</label>
+          <select {...field('vehicleType')} className={inputCls}>
+            <option value="">-- wybierz --</option>
+            {VEHICLE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>Typ taboru</label>
+          <select {...field('fleetType')} className={inputCls}>
+            <option value="">-- wybierz --</option>
+            {FLEET_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>Stan</label>
+          <select {...field('status')} className={inputCls}>
+            {VEHICLE_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </div>
       </div>
+
+      {/* Wiersz 4 — kierowca + uwagi */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div><label className={labelCls}>Przypisany kierowca</label><select {...field('assignedDriverId')} className={inputCls}><option value="">-- Brak --</option>{driversList.map(d => <option key={d.id} value={d.id}>{d.displayName}</option>)}</select></div>
+        <div>
+          <label className={labelCls}>Przypisany kierowca</label>
+          <select {...field('assignedDriverId')} className={inputCls}>
+            <option value="">-- Brak --</option>
+            {driversList.map(d => <option key={d.id} value={d.id}>{d.displayName}</option>)}
+          </select>
+        </div>
         <div><label className={labelCls}>Uwagi</label><input type="text" placeholder="np. tylko trasy płaskie" {...field('notes')} className={inputCls} /></div>
       </div>
+
+      {/* Wiersz 5 — zdjęcie tablicy rejestracyjnej */}
+      <div>
+        <label className={labelCls}>Zdjęcie tablicy rejestracyjnej (JPG/PNG)</label>
+        <div className="flex items-start gap-4">
+          <div className="relative flex-1 border-2 border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-950/50 rounded-xl flex items-center justify-center group cursor-pointer h-20">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/jpg"
+              onChange={onPlateImageChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+            <div className="flex flex-col items-center gap-1 text-center px-4">
+              <Image className="w-5 h-5 text-zinc-600 group-hover:text-emerald-400" />
+              <span className="text-xs text-zinc-500">Wgraj zdjęcie tablicy</span>
+            </div>
+          </div>
+          {/* Podgląd aktualnego zdjęcia */}
+          {(plateImagePreview || values.plateImageUrl) && (
+            <div className="flex-shrink-0">
+              <img
+                src={plateImagePreview || (values.plateImageUrl ? `${API_URL}${values.plateImageUrl}` : '')}
+                alt="Tablica rejestracyjna"
+                className="h-20 rounded-xl border border-zinc-700 object-cover"
+                style={{ maxWidth: '200px' }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="flex gap-3 pt-2">
         <button type="submit" className="flex items-center gap-2 px-6 py-2.5 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors"><Save className="w-4 h-4" /> {submitLabel}</button>
         <button type="button" onClick={onCancel} className="p-2.5 bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-xl transition-colors"><X className="w-4 h-4" /></button>
@@ -190,42 +233,79 @@ const FleetForm = ({ values, onChange, driversList, onSubmit, onCancel, submitLa
   );
 };
 
+// ---------------------------------------------------------
+// FleetView — zaktualizowany widok
+// ---------------------------------------------------------
 const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
   const [showAdd, setShowAdd] = useState(false);
   const [addValues, setAddValues] = useState(emptyVehicle);
+  const [addPlateFile, setAddPlateFile] = useState(null);
+  const [addPlatePreview, setAddPlatePreview] = useState(null);
   const [editId, setEditId] = useState(null);
   const [editValues, setEditValues] = useState(emptyVehicle);
+  const [editPlateFile, setEditPlateFile] = useState(null);
+  const [editPlatePreview, setEditPlatePreview] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+
+  const handlePlateImageChange = (e, setFile, setPreview) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const buildFormData = (values, plateFile, driversList) => {
+    const selectedDriver = driversList.find(d => d.id === values.assignedDriverId);
+    const formData = new FormData();
+    Object.entries(values).forEach(([k, v]) => formData.append(k, v || ''));
+    formData.set('assignedDriverName', selectedDriver ? selectedDriver.displayName : 'Brak');
+    if (plateFile) formData.append('plate_image', plateFile);
+    return formData;
+  };
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-    const selectedDriver = driversList.find(d => d.id === addValues.assignedDriverId);
     try {
-      const res = await authFetch(`${API_URL}/api/fleet`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...addValues, assignedDriverName: selectedDriver ? selectedDriver.displayName : 'Brak' }) });
+      const formData = buildFormData(addValues, addPlateFile, driversList);
+      const res = await authFetch(`${API_URL}/api/fleet`, { method: 'POST', body: formData });
       const data = await res.json();
-      if (data.success) { setAddValues(emptyVehicle); setShowAdd(false); onRefresh(); }
+      if (data.success) {
+        setAddValues(emptyVehicle); setAddPlateFile(null); setAddPlatePreview(null);
+        setShowAdd(false); onRefresh();
+      }
     } catch (err) { console.error(err); }
   };
 
   const startEdit = (vehicle) => {
     setEditId(vehicle.id);
-    setEditValues({ busNumber: vehicle.busNumber, brand: vehicle.brand || '', model: vehicle.model, vehicleType: vehicle.vehicleType || '', fleetType: vehicle.fleetType || '', status: vehicle.status || 'sprawny', yearManufactured: vehicle.yearManufactured || '', registrationNumber: vehicle.registrationNumber || '', assignedDriverId: vehicle.assignedDriverId || '', notes: vehicle.notes || '' });
+    setEditValues({
+      busNumber: vehicle.busNumber, brand: vehicle.brand || '', model: vehicle.model,
+      vehicleType: vehicle.vehicleType || '', fleetType: vehicle.fleetType || '',
+      status: vehicle.status || 'eksploatowany', yearManufactured: vehicle.yearManufactured || '',
+      registrationNumber: vehicle.registrationNumber || '', assignedDriverId: vehicle.assignedDriverId || '',
+      notes: vehicle.notes || '', plateImageUrl: vehicle.plateImageUrl || ''
+    });
+    setEditPlateFile(null); setEditPlatePreview(null);
     setExpandedId(null);
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    const selectedDriver = driversList.find(d => d.id === editValues.assignedDriverId);
     try {
-      const res = await authFetch(`${API_URL}/api/fleet/${editId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...editValues, assignedDriverName: selectedDriver ? selectedDriver.displayName : 'Brak' }) });
-      if (res.ok) { setEditId(null); onRefresh(); }
+      const formData = buildFormData(editValues, editPlateFile, driversList);
+      const res = await authFetch(`${API_URL}/api/fleet/${editId}`, { method: 'PUT', body: formData });
+      if (res.ok) { setEditId(null); setEditPlateFile(null); setEditPlatePreview(null); onRefresh(); }
     } catch (err) { console.error(err); }
   };
 
   const handleUnassign = async (vehicle) => {
     if (!confirm(`Anulować przypisanie kierowcy do wozu #${vehicle.busNumber}?`)) return;
     try {
-      await authFetch(`${API_URL}/api/fleet/${vehicle.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...vehicle, assignedDriverId: '', assignedDriverName: 'Brak' }) });
+      const formData = new FormData();
+      Object.entries({ ...vehicle, assignedDriverId: '', assignedDriverName: 'Brak' }).forEach(([k, v]) => formData.append(k, v || ''));
+      await authFetch(`${API_URL}/api/fleet/${vehicle.id}`, { method: 'PUT', body: formData });
       onRefresh();
     } catch (err) { console.error(err); }
   };
@@ -242,54 +322,151 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
         <h2 className="text-xl font-medium text-zinc-200">Tabor</h2>
         {isAdmin && <button onClick={() => setShowAdd(v => !v)} className="flex items-center gap-2 px-4 py-2 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors"><Plus className="w-4 h-4" /> Dodaj pojazd</button>}
       </div>
+
       {isAdmin && showAdd && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
           <h3 className="text-sm font-medium text-zinc-300 mb-5 flex items-center gap-2"><Truck className="w-4 h-4 text-emerald-400" /> Nowy pojazd</h3>
-          <FleetForm values={addValues} onChange={(n,v) => setAddValues(x => ({...x,[n]:v}))} driversList={driversList} onSubmit={handleAddSubmit} onCancel={() => setShowAdd(false)} submitLabel="Dodaj pojazd" />
+          <FleetForm
+            values={addValues}
+            onChange={(n, v) => setAddValues(x => ({ ...x, [n]: v }))}
+            driversList={driversList}
+            onSubmit={handleAddSubmit}
+            onCancel={() => { setShowAdd(false); setAddPlatePreview(null); setAddPlateFile(null); }}
+            submitLabel="Dodaj pojazd"
+            onPlateImageChange={(e) => handlePlateImageChange(e, setAddPlateFile, setAddPlatePreview)}
+            plateImagePreview={addPlatePreview}
+          />
         </div>
       )}
+
       <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
         {fleet.length === 0 ? (
           <div className="p-10 text-center text-zinc-500 text-sm">Brak pojazdów w taborze.{isAdmin && ' Dodaj pierwszy wóz przyciskiem powyżej.'}</div>
         ) : (
           <div className="divide-y divide-zinc-800/60">
-            <div className="hidden md:grid md:grid-cols-12 px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-              <div className="col-span-1">Nr tab.</div><div className="col-span-3">Marka / Model</div><div className="col-span-2">Rodzaj</div><div className="col-span-2">Stan</div><div className="col-span-2">Kierowca</div>{isAdmin && <div className="col-span-2 text-right">Akcje</div>}
+            {/* Nagłówek tabeli */}
+            <div className="hidden md:grid px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider" style={{gridTemplateColumns: '60px 1fr 60px 120px 120px 1fr'}}>
+              <div>Nr tab.</div>
+              <div>Marka / Model</div>
+              <div>Typ</div>
+              <div>Tablica</div>
+              <div>Stan</div>
+              <div className="text-right">Akcje</div>
             </div>
+
             {fleet.map((vehicle) => (
               <div key={vehicle.id}>
                 {editId === vehicle.id ? (
                   <div className="px-6 py-5">
                     <p className="text-xs text-zinc-500 mb-4 flex items-center gap-2"><Pencil className="w-3 h-3" /> Edycja: wóz #{vehicle.busNumber}</p>
-                    <FleetForm values={editValues} onChange={(n,v) => setEditValues(x => ({...x,[n]:v}))} driversList={driversList} onSubmit={handleEditSubmit} onCancel={() => setEditId(null)} submitLabel="Zapisz zmiany" />
+                    <FleetForm
+                      values={editValues}
+                      onChange={(n, v) => setEditValues(x => ({ ...x, [n]: v }))}
+                      driversList={driversList}
+                      onSubmit={handleEditSubmit}
+                      onCancel={() => { setEditId(null); setEditPlatePreview(null); setEditPlateFile(null); }}
+                      submitLabel="Zapisz zmiany"
+                      onPlateImageChange={(e) => handlePlateImageChange(e, setEditPlateFile, setEditPlatePreview)}
+                      plateImagePreview={editPlatePreview}
+                    />
                   </div>
                 ) : (
                   <>
-                    <div className="px-6 py-4 hover:bg-zinc-800/20 transition-colors cursor-pointer" onClick={() => setExpandedId(expandedId === vehicle.id ? null : vehicle.id)}>
-                      <div className="grid grid-cols-12 gap-3 items-center">
-                        <div className="col-span-2 md:col-span-1"><span className="inline-flex items-center justify-center w-12 h-10 bg-zinc-950 border border-zinc-800 rounded-xl text-emerald-400 font-bold text-sm">{vehicle.busNumber}</span></div>
-                        <div className="col-span-6 md:col-span-3"><p className="text-sm font-medium text-zinc-200">{vehicle.brand ? `${vehicle.brand} ${vehicle.model}` : vehicle.model}</p>{vehicle.registrationNumber && <p className="text-xs text-zinc-600 mt-0.5">{vehicle.registrationNumber}</p>}</div>
-                        <div className="hidden md:block md:col-span-2"><p className="text-xs text-zinc-400">{vehicle.vehicleType || '—'}</p><p className="text-xs text-zinc-600 mt-0.5">{vehicle.fleetType || ''}</p></div>
-                        <div className="hidden md:block md:col-span-2">{statusBadge(vehicle.status)}</div>
-                        <div className="hidden md:flex md:col-span-2 items-center gap-2">{vehicle.assignedDriverId ? <><div className="w-6 h-6 bg-zinc-800 rounded-full flex items-center justify-center text-[10px] font-medium text-emerald-400 border border-zinc-700">{vehicle.assignedDriverName.charAt(0)}</div><span className="text-xs text-zinc-300 truncate">{vehicle.assignedDriverName}</span></> : <span className="text-xs text-zinc-600 italic">Nieprzypisany</span>}</div>
-                        <div className="col-span-4 md:col-span-2 flex gap-2 items-center justify-end">
-                          {isAdmin && (<><button onClick={(e) => { e.stopPropagation(); startEdit(vehicle); }} className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-zinc-200 hover:bg-zinc-700 transition-colors"><Pencil className="w-4 h-4" /></button>{vehicle.assignedDriverId && <button onClick={(e) => { e.stopPropagation(); handleUnassign(vehicle); }} className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-amber-400 hover:bg-amber-500/10 transition-colors"><UserX className="w-4 h-4" /></button>}<button onClick={(e) => { e.stopPropagation(); handleDelete(vehicle.id); }} className="p-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-colors"><XCircle className="w-4 h-4" /></button></>)}
+                    <div
+                      className="px-6 py-4 hover:bg-zinc-800/20 transition-colors cursor-pointer"
+                      onClick={() => setExpandedId(expandedId === vehicle.id ? null : vehicle.id)}
+                    >
+                      <div className="grid items-center gap-3" style={{gridTemplateColumns: '60px 1fr 60px 120px 120px 1fr'}}>
+                        {/* Nr tab */}
+                        <span className="inline-flex items-center justify-center w-12 h-10 bg-zinc-950 border border-zinc-800 rounded-xl text-emerald-400 font-bold text-sm font-mono">{vehicle.busNumber}</span>
+
+                        {/* Marka / Model */}
+                        <div>
+                          <p className="text-sm font-medium text-zinc-200">{vehicle.brand ? `${vehicle.brand} ${vehicle.model}` : vehicle.model}</p>
+                          <p className="text-xs text-zinc-600 mt-0.5">{vehicle.fleetType || ''}</p>
+                        </div>
+
+                        {/* Typ CN/BN/AN/MN */}
+                        <div className="hidden md:block">{vehicleTypeBadge(vehicle.vehicleType)}</div>
+
+                        {/* Tablica rejestracyjna — zdjęcie lub tekst */}
+                        <div className="hidden md:block">
+                          {vehicle.plateImageUrl ? (
+                            <img
+                              src={`${API_URL}${vehicle.plateImageUrl}`}
+                              alt={vehicle.registrationNumber || 'Tablica'}
+                              className="h-8 rounded-md object-cover border border-zinc-700 cursor-pointer"
+                              style={{ maxWidth: '110px' }}
+                              onClick={(e) => { e.stopPropagation(); window.open(`${API_URL}${vehicle.plateImageUrl}`, '_blank'); }}
+                            />
+                          ) : (
+                            <span className="text-xs text-zinc-500 font-mono">{vehicle.registrationNumber || '—'}</span>
+                          )}
+                        </div>
+
+                        {/* Stan */}
+                        <div className="hidden md:block">{statusBadge(vehicle.status)}</div>
+
+                        {/* Akcje + chevron */}
+                        <div className="flex gap-2 items-center justify-end">
+                          {isAdmin && (
+                            <>
+                              <button onClick={(e) => { e.stopPropagation(); startEdit(vehicle); }} className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-zinc-200 hover:bg-zinc-700 transition-colors"><Pencil className="w-4 h-4" /></button>
+                              {vehicle.assignedDriverId && <button onClick={(e) => { e.stopPropagation(); handleUnassign(vehicle); }} className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-amber-400 hover:bg-amber-500/10 transition-colors"><UserX className="w-4 h-4" /></button>}
+                              <button onClick={(e) => { e.stopPropagation(); handleDelete(vehicle.id); }} className="p-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-colors"><XCircle className="w-4 h-4" /></button>
+                            </>
+                          )}
                           <span className="text-zinc-600">{expandedId === vehicle.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</span>
                         </div>
                       </div>
                     </div>
+
+                    {/* Panel rozwinięty */}
                     {expandedId === vehicle.id && (
                       <div className="px-6 pb-5 bg-zinc-950/30">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-800/60">
+                          <div><p className="text-xs text-zinc-500 mb-1">Nr taborowy</p><p className="text-sm text-zinc-200 font-mono font-bold">{vehicle.busNumber}</p></div>
                           <div><p className="text-xs text-zinc-500 mb-1">Marka</p><p className="text-sm text-zinc-200">{vehicle.brand || '—'}</p></div>
                           <div><p className="text-xs text-zinc-500 mb-1">Typ / Model</p><p className="text-sm text-zinc-200">{vehicle.model || '—'}</p></div>
-                          <div><p className="text-xs text-zinc-500 mb-1">Rodzaj pojazdu</p><p className="text-sm text-zinc-200">{vehicle.vehicleType || '—'}</p></div>
+                          <div>
+                            <p className="text-xs text-zinc-500 mb-1">Rodzaj pojazdu</p>
+                            <div className="flex items-center gap-2">
+                              {vehicleTypeBadge(vehicle.vehicleType)}
+                              <span className="text-xs text-zinc-500">{VEHICLE_TYPES.find(t => t.value === vehicle.vehicleType)?.label?.split('—')[1]?.trim() || ''}</span>
+                            </div>
+                          </div>
                           <div><p className="text-xs text-zinc-500 mb-1">Typ taboru</p><p className="text-sm text-zinc-200">{vehicle.fleetType || '—'}</p></div>
-                          <div><p className="text-xs text-zinc-500 mb-1">Nr rejestracyjny</p><p className="text-sm text-zinc-200">{vehicle.registrationNumber || '—'}</p></div>
+                          <div>
+                            <p className="text-xs text-zinc-500 mb-1">Nr rejestracyjny</p>
+                            <p className="text-sm text-zinc-200 font-mono">{vehicle.registrationNumber || '—'}</p>
+                          </div>
                           <div><p className="text-xs text-zinc-500 mb-1">Rok produkcji</p><p className="text-sm text-zinc-200">{vehicle.yearManufactured || '—'}</p></div>
                           <div><p className="text-xs text-zinc-500 mb-1">Stan</p>{statusBadge(vehicle.status)}</div>
-                          <div><p className="text-xs text-zinc-500 mb-1">Kierowca</p><p className="text-sm text-zinc-200">{vehicle.assignedDriverName || 'Brak'}</p></div>
-                          {vehicle.notes && <div className="col-span-2 md:col-span-4"><p className="text-xs text-zinc-500 mb-1">Uwagi</p><p className="text-sm text-zinc-300 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5">{vehicle.notes}</p></div>}
+                          <div className="col-span-2 md:col-span-2">
+                            <p className="text-xs text-zinc-500 mb-1">Kierowca</p>
+                            <p className="text-sm text-zinc-200">{vehicle.assignedDriverName || 'Brak'}</p>
+                          </div>
+
+                          {/* Zdjęcie tablicy w powiększeniu */}
+                          {vehicle.plateImageUrl && (
+                            <div className="col-span-2 md:col-span-4">
+                              <p className="text-xs text-zinc-500 mb-2">Tablica rejestracyjna</p>
+                              <img
+                                src={`${API_URL}${vehicle.plateImageUrl}`}
+                                alt="Tablica rejestracyjna"
+                                className="rounded-xl border border-zinc-700 object-cover cursor-pointer hover:border-zinc-500 transition-colors"
+                                style={{ maxHeight: '80px', maxWidth: '300px' }}
+                                onClick={() => window.open(`${API_URL}${vehicle.plateImageUrl}`, '_blank')}
+                              />
+                            </div>
+                          )}
+
+                          {vehicle.notes && (
+                            <div className="col-span-2 md:col-span-4">
+                              <p className="text-xs text-zinc-500 mb-1">Uwagi</p>
+                              <p className="text-sm text-zinc-300 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5">{vehicle.notes}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -304,6 +481,9 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
   );
 };
 
+// ---------------------------------------------------------
+// ChangePasswordForm
+// ---------------------------------------------------------
 const ChangePasswordForm = ({ currentPassword, setCurrentPassword, newPassword, setNewPassword, changePasswordMsg, onSubmit }) => (
   <div className="animate-in fade-in duration-500">
     <h2 className="text-xl font-medium mb-4 text-zinc-200">Zmiana hasła</h2>
@@ -318,6 +498,9 @@ const ChangePasswordForm = ({ currentPassword, setCurrentPassword, newPassword, 
   </div>
 );
 
+// ---------------------------------------------------------
+// MessagesView
+// ---------------------------------------------------------
 const MessagesView = ({ user, driversList, onUnreadCountChange }) => {
   const [messages, setMessages] = useState([]);
   const [allMessages, setAllMessages] = useState([]);
@@ -347,21 +530,14 @@ const MessagesView = ({ user, driversList, onUnreadCountChange }) => {
     } catch (err) { console.error(err); }
   }, [isAdmin]);
 
-  useEffect(() => {
-    fetchMessages();
-    if (isAdmin) fetchAllMessages();
-  }, [fetchMessages, fetchAllMessages]);
+  useEffect(() => { fetchMessages(); if (isAdmin) fetchAllMessages(); }, [fetchMessages, fetchAllMessages]);
 
   const handleReadAll = async () => {
-    try { await authFetch(`${API_URL}/api/messages/read-all`, { method: 'POST' }); fetchMessages(); }
-    catch (err) { console.error(err); }
+    try { await authFetch(`${API_URL}/api/messages/read-all`, { method: 'POST' }); fetchMessages(); } catch (err) { console.error(err); }
   };
-
   const handleRead = async (id) => {
-    try { await authFetch(`${API_URL}/api/messages/${id}/read`, { method: 'POST' }); fetchMessages(); }
-    catch (err) { console.error(err); }
+    try { await authFetch(`${API_URL}/api/messages/${id}/read`, { method: 'POST' }); fetchMessages(); } catch (err) { console.error(err); }
   };
-
   const handleSend = async (e) => {
     e.preventDefault();
     if (!newContent.trim()) return;
@@ -375,24 +551,15 @@ const MessagesView = ({ user, driversList, onUnreadCountChange }) => {
         body: JSON.stringify({ toId: isGlobal ? null : newToId, toName: isGlobal ? null : (selectedDriver ? selectedDriver.displayName : ''), content: newContent, isGlobal })
       });
       setNewContent(''); setNewToId(''); setIsGlobal(false);
-      setSendSuccess(true);
-      setTimeout(() => setSendSuccess(false), 2000);
+      setSendSuccess(true); setTimeout(() => setSendSuccess(false), 2000);
       fetchAllMessages();
-    } catch (err) { console.error(err); }
-    finally { setSending(false); }
+    } catch (err) { console.error(err); } finally { setSending(false); }
   };
-
   const handleDelete = async (id) => {
     if (!confirm('Usunąć ten komunikat?')) return;
-    try { await authFetch(`${API_URL}/api/messages/${id}`, { method: 'DELETE' }); fetchAllMessages(); fetchMessages(); }
-    catch (err) { console.error(err); }
+    try { await authFetch(`${API_URL}/api/messages/${id}`, { method: 'DELETE' }); fetchAllMessages(); fetchMessages(); } catch (err) { console.error(err); }
   };
-
-  const formatDate = (dateStr) => {
-    const d = new Date(dateStr);
-    return d.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  };
-
+  const formatDate = (dateStr) => new Date(dateStr).toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   const unreadMessages = messages.filter(m => !m.isRead);
   const readMessages = messages.filter(m => m.isRead);
 
@@ -400,11 +567,8 @@ const MessagesView = ({ user, driversList, onUnreadCountChange }) => {
     <div className="animate-in fade-in duration-500 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-medium text-zinc-200 flex items-center gap-2"><MessageSquare className="w-5 h-5 text-emerald-400" /> Komunikaty</h2>
-        {!isAdmin && unreadMessages.length > 0 && (
-          <button onClick={handleReadAll} className="text-xs text-zinc-400 hover:text-zinc-200 underline underline-offset-2">Oznacz wszystkie jako przeczytane</button>
-        )}
+        {!isAdmin && unreadMessages.length > 0 && <button onClick={handleReadAll} className="text-xs text-zinc-400 hover:text-zinc-200 underline underline-offset-2">Oznacz wszystkie jako przeczytane</button>}
       </div>
-
       {isAdmin && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
           <h3 className="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2"><Send className="w-4 h-4 text-emerald-400" /> Nowy komunikat</h3>
@@ -412,12 +576,7 @@ const MessagesView = ({ user, driversList, onUnreadCountChange }) => {
             <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-sm text-center">✅ Komunikat wysłany!</div>
           ) : (
             <form onSubmit={handleSend} className="space-y-4">
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={isGlobal} onChange={(e) => { setIsGlobal(e.target.checked); setNewToId(''); }} className="w-4 h-4 rounded accent-emerald-400" />
-                  <span className="text-sm text-zinc-300">Do wszystkich kierowców</span>
-                </label>
-              </div>
+              <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={isGlobal} onChange={(e) => { setIsGlobal(e.target.checked); setNewToId(''); }} className="w-4 h-4 rounded accent-emerald-400" /><span className="text-sm text-zinc-300">Do wszystkich kierowców</span></label>
               {!isGlobal && (
                 <div>
                   <label className="block text-xs font-medium text-zinc-500 mb-1.5">Odbiorca</label>
@@ -425,21 +584,14 @@ const MessagesView = ({ user, driversList, onUnreadCountChange }) => {
                     <option value="">-- Wybierz kierowcę --</option>
                     {driversList.map(d => <option key={d.id} value={d.id}>{d.displayName} ({d.login})</option>)}
                   </select>
-                  {driversList.length === 0 && <p className="text-[10px] text-red-400 mt-1">Najpierw dodaj kierowcę w zakładce Załoga.</p>}
                 </div>
               )}
-              <div>
-                <label className="block text-xs font-medium text-zinc-500 mb-1.5">Treść komunikatu</label>
-                <textarea required rows={3} value={newContent} onChange={(e) => setNewContent(e.target.value)} placeholder="Wpisz treść komunikatu..." className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50 resize-none" />
-              </div>
-              <button type="submit" disabled={sending} className="flex items-center gap-2 px-6 py-2.5 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors disabled:opacity-60">
-                <Send className="w-4 h-4" /> {sending ? 'Wysyłanie...' : 'Wyślij komunikat'}
-              </button>
+              <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Treść komunikatu</label><textarea required rows={3} value={newContent} onChange={(e) => setNewContent(e.target.value)} placeholder="Wpisz treść komunikatu..." className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50 resize-none" /></div>
+              <button type="submit" disabled={sending} className="flex items-center gap-2 px-6 py-2.5 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors disabled:opacity-60"><Send className="w-4 h-4" /> {sending ? 'Wysyłanie...' : 'Wyślij komunikat'}</button>
             </form>
           )}
         </div>
       )}
-
       {!isAdmin && (
         <div className="space-y-3">
           {messages.length === 0 ? (
@@ -453,14 +605,10 @@ const MessagesView = ({ user, driversList, onUnreadCountChange }) => {
                     <div key={m.id} className="bg-zinc-900 border border-emerald-500/20 rounded-2xl p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
-                            <span className="text-xs font-medium text-emerald-400">{m.isGlobal ? '📢 Ogłoszenie dla wszystkich' : `Od: ${m.fromName}`}</span>
-                            <span className="text-xs text-zinc-600 ml-auto">{formatDate(m.createdAt)}</span>
-                          </div>
+                          <div className="flex items-center gap-2 mb-2"><span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span><span className="text-xs font-medium text-emerald-400">{m.isGlobal ? '📢 Ogłoszenie dla wszystkich' : `Od: ${m.fromName}`}</span><span className="text-xs text-zinc-600 ml-auto">{formatDate(m.createdAt)}</span></div>
                           <p className="text-sm text-zinc-200 leading-relaxed">{m.content}</p>
                         </div>
-                        <button onClick={() => handleRead(m.id)} className="flex-shrink-0 p-1.5 text-zinc-500 hover:text-emerald-400 transition-colors" title="Oznacz jako przeczytane"><CheckCircle className="w-4 h-4" /></button>
+                        <button onClick={() => handleRead(m.id)} className="flex-shrink-0 p-1.5 text-zinc-500 hover:text-emerald-400 transition-colors"><CheckCircle className="w-4 h-4" /></button>
                       </div>
                     </div>
                   ))}
@@ -471,10 +619,7 @@ const MessagesView = ({ user, driversList, onUnreadCountChange }) => {
                   {unreadMessages.length > 0 && <p className="text-xs font-medium text-zinc-600 uppercase tracking-wider px-1 pt-2">Przeczytane</p>}
                   {readMessages.map(m => (
                     <div key={m.id} className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-4">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className="text-xs text-zinc-500">{m.isGlobal ? '📢 Ogłoszenie' : `Od: ${m.fromName}`}</span>
-                        <span className="text-xs text-zinc-600 ml-auto">{formatDate(m.createdAt)}</span>
-                      </div>
+                      <div className="flex items-center gap-2 mb-1.5"><span className="text-xs text-zinc-500">{m.isGlobal ? '📢 Ogłoszenie' : `Od: ${m.fromName}`}</span><span className="text-xs text-zinc-600 ml-auto">{formatDate(m.createdAt)}</span></div>
                       <p className="text-sm text-zinc-400 leading-relaxed">{m.content}</p>
                     </div>
                   ))}
@@ -484,23 +629,16 @@ const MessagesView = ({ user, driversList, onUnreadCountChange }) => {
           )}
         </div>
       )}
-
       {isAdmin && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
           <div className="p-5 border-b border-zinc-800/80"><h3 className="text-sm font-medium text-zinc-300">Wysłane komunikaty</h3></div>
-          {allMessages.length === 0 ? (
-            <div className="p-8 text-center text-zinc-500 text-sm">Brak wysłanych komunikatów.</div>
-          ) : (
+          {allMessages.length === 0 ? <div className="p-8 text-center text-zinc-500 text-sm">Brak wysłanych komunikatów.</div> : (
             <div className="divide-y divide-zinc-800/60">
               {allMessages.map(m => (
                 <div key={m.id} className="px-5 py-4 flex items-start justify-between gap-4 hover:bg-zinc-800/20 transition-colors">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      {m.isGlobal ? (
-                        <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md text-xs font-medium">📢 Dla wszystkich</span>
-                      ) : (
-                        <span className="px-2 py-0.5 bg-zinc-800 text-zinc-300 rounded-md text-xs font-medium">→ {m.toName}</span>
-                      )}
+                      {m.isGlobal ? <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md text-xs font-medium">📢 Dla wszystkich</span> : <span className="px-2 py-0.5 bg-zinc-800 text-zinc-300 rounded-md text-xs font-medium">→ {m.toName}</span>}
                       <span className="text-xs text-zinc-600">{formatDate(m.createdAt)}</span>
                     </div>
                     <p className="text-sm text-zinc-300 leading-relaxed">{m.content}</p>
@@ -557,11 +695,7 @@ export default function App() {
   useEffect(() => {
     if (!isLoggedIn || !user) return;
     const fetchUnread = async () => {
-      try {
-        const res = await authFetch(`${API_URL}/api/messages/unread-count`);
-        const data = await res.json();
-        setUnreadCount(data.count || 0);
-      } catch (err) {}
+      try { const res = await authFetch(`${API_URL}/api/messages/unread-count`); const data = await res.json(); setUnreadCount(data.count || 0); } catch (err) {}
     };
     fetchUnread();
     const interval = setInterval(fetchUnread, 30000);
@@ -604,8 +738,7 @@ export default function App() {
         setIsLoggedIn(true);
         setActiveTab(data.user.role === 'admin' ? 'admin' : 'dashboard');
       } else { setLoginError(data.message); }
-    } catch { setLoginError("Błąd łączenia z serwerem."); }
-    finally { setIsLoading(false); }
+    } catch { setLoginError("Błąd łączenia z serwerem."); } finally { setIsLoading(false); }
   };
 
   const handleLogout = () => {
@@ -618,10 +751,8 @@ export default function App() {
   const submitDriverReport = async () => {
     if (!driverReportFile) return;
     const formData = new FormData();
-    formData.append('report_pdf', driverReportFile);
-    formData.append('driverId', user.id);
-    formData.append('driverName', user.name);
-    formData.append('line', myShift?.line ?? 'brak');
+    formData.append('report_pdf', driverReportFile); formData.append('driverId', user.id);
+    formData.append('driverName', user.name); formData.append('line', myShift?.line ?? 'brak');
     try { const res = await authFetch(`${API_URL}/api/reports`, { method: 'POST', body: formData }); if (res.ok) { setIsUploaded(true); fetchShiftHistory(user.id); } } catch (err) { console.error(err); }
   };
 
@@ -668,9 +799,7 @@ export default function App() {
     try { const response = await authFetch(`${API_URL}/api/reports/${id}/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }) }); if (response.ok) fetchReports(); } catch (err) { console.error(err); }
   };
 
-  // ---------------------------------------------------------
   // EKRAN LOGOWANIA
-  // ---------------------------------------------------------
   if (!isLoggedIn) {
     return (
       <div className="relative min-h-screen bg-zinc-950 flex items-center justify-center p-4 font-sans text-zinc-100 overflow-hidden">
@@ -693,9 +822,7 @@ export default function App() {
     );
   }
 
-  // ---------------------------------------------------------
   // GŁÓWNY PANEL
-  // ---------------------------------------------------------
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex justify-center p-4 sm:p-8">
       <div className="w-full max-w-4xl flex flex-col gap-6">
@@ -708,7 +835,6 @@ export default function App() {
               <p className="text-xs text-zinc-500">{user.role === 'admin' ? 'Centrala Dyspozytorska' : 'Kierowca Liniowy'}</p>
             </div>
           </div>
-
           <div className="flex gap-2 items-center">
             {user.role === 'driver' && (
               <>
@@ -716,17 +842,9 @@ export default function App() {
                 <button onClick={() => { setActiveTab('report'); setShowChangePassword(false); }} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'report' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Złóż raport"><FileText className="h-5 w-5" /></button>
                 <button onClick={() => { setActiveTab('fleet'); setShowChangePassword(false); fetchFleet(); fetchDrivers(); }} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'fleet' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Tabor"><Truck className="h-5 w-5" /></button>
                 <button onClick={() => { setActiveTab('schedules'); setShowChangePassword(false); }} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'schedules' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Rozkłady jazdy"><BookOpen className="h-5 w-5" /></button>
-                <button
-                  onClick={() => { setActiveTab('messages'); setShowChangePassword(false); setUnreadCount(0); }}
-                  className={`relative p-2.5 rounded-xl transition-colors ${activeTab === 'messages' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                  title="Komunikaty"
-                >
+                <button onClick={() => { setActiveTab('messages'); setShowChangePassword(false); setUnreadCount(0); }} className={`relative p-2.5 rounded-xl transition-colors ${activeTab === 'messages' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Komunikaty">
                   {unreadCount > 0 ? <BellRing className="h-5 w-5 text-emerald-400" /> : <Bell className="h-5 w-5" />}
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-zinc-950 text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
+                  {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-zinc-950 text-[10px] font-bold rounded-full flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>}
                 </button>
                 <button onClick={() => setShowChangePassword(v => !v)} className={`p-2.5 rounded-xl transition-colors ${showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Zmień hasło"><KeyRound className="h-5 w-5" /></button>
               </>
@@ -739,7 +857,6 @@ export default function App() {
         <main className="flex-1 space-y-6">
           {showChangePassword && <ChangePasswordForm currentPassword={currentPassword} setCurrentPassword={setCurrentPassword} newPassword={newPassword} setNewPassword={setNewPassword} changePasswordMsg={changePasswordMsg} onSubmit={handleChangePassword} />}
 
-          {/* KIEROWCA */}
           {user.role === 'driver' && !showChangePassword && activeTab === 'dashboard' && (
             <div className="animate-in fade-in duration-500 space-y-6">
               <div>
@@ -810,17 +927,9 @@ export default function App() {
             </div>
           )}
 
-          {user.role === 'driver' && !showChangePassword && activeTab === 'fleet' && (
-            <FleetView isAdmin={false} fleet={fleet} driversList={driversList} onRefresh={fetchFleet} />
-          )}
-
-          {user.role === 'driver' && !showChangePassword && activeTab === 'schedules' && (
-            <SchedulesView />
-          )}
-
-          {user.role === 'driver' && !showChangePassword && activeTab === 'messages' && (
-            <MessagesView user={user} driversList={driversList} onUnreadCountChange={setUnreadCount} />
-          )}
+          {user.role === 'driver' && !showChangePassword && activeTab === 'fleet' && <FleetView isAdmin={false} fleet={fleet} driversList={driversList} onRefresh={fetchFleet} />}
+          {user.role === 'driver' && !showChangePassword && activeTab === 'schedules' && <SchedulesView />}
+          {user.role === 'driver' && !showChangePassword && activeTab === 'messages' && <MessagesView user={user} driversList={driversList} onUnreadCountChange={setUnreadCount} />}
 
           {/* ADMIN */}
           {user.role === 'admin' && !showChangePassword && (
@@ -948,12 +1057,8 @@ export default function App() {
               )}
 
               {adminSubTab === 'fleet' && <FleetView isAdmin={true} fleet={fleet} driversList={driversList} onRefresh={fetchFleet} />}
-
               {adminSubTab === 'schedules' && <SchedulesView />}
-
-              {adminSubTab === 'messages' && (
-                <MessagesView user={user} driversList={driversList} onUnreadCountChange={() => {}} />
-              )}
+              {adminSubTab === 'messages' && <MessagesView user={user} driversList={driversList} onUnreadCountChange={() => {}} />}
             </div>
           )}
         </main>
