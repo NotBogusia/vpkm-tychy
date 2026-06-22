@@ -89,13 +89,12 @@ const SchedulesView = () => {
 
 // ZMIANA: usunięte myślniki, sam skrót + opis po spacji
 const VEHICLE_TYPES = [
-  { value: 'CN', label: 'CN Autobus przegubowy' },
-  { value: 'BN', label: 'BN Autobus standardowy' },
-  { value: 'AN', label: 'AN Autobus midi' },
-  { value: 'MN', label: 'MN Autobus mini' },
-  { value: 'TR', label: 'TR Tramwaj' },
-  { value: 'TP', label: 'TP Trolejbus' },
-  { value: 'SP', label: 'SP Specjalny' },
+  { value: 'CN', label: 'CN' },
+  { value: 'BN', label: 'BN' },
+  { value: 'AN', label: 'AN' },
+  { value: 'MN', label: 'MN' },
+  { value: 'TP', label: 'TP' },
+  { value: 'SP', label: 'SP' },
 ];
 
 const VEHICLE_STATUSES = [
