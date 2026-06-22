@@ -84,23 +84,20 @@ const SchedulesView = () => {
 };
 
 // ---------------------------------------------------------
-// TABOR — zaktualizowane stałe
+// TABOR
 // ---------------------------------------------------------
 
-// Rodzaj pojazdu — skrótowy system jak w ZTM
+// ZMIANA: usunięte myślniki, sam skrót + opis po spacji
 const VEHICLE_TYPES = [
-  { value: 'CN', label: 'CN — Autobus przegubowy' },
-  { value: 'BN', label: 'BN — Autobus standardowy' },
-  { value: 'AN', label: 'AN — Autobus midi' },
-  { value: 'MN', label: 'MN — Autobus mini' },
-  { value: 'TR', label: 'TR — Tramwaj' },
-  { value: 'TP', label: 'TP — Trolejbus' },
-  { value: 'SP', label: 'SP — Specjalny' },
+  { value: 'CN', label: 'CN Autobus przegubowy' },
+  { value: 'BN', label: 'BN Autobus standardowy' },
+  { value: 'AN', label: 'AN Autobus midi' },
+  { value: 'MN', label: 'MN Autobus mini' },
+  { value: 'TR', label: 'TR Tramwaj' },
+  { value: 'TP', label: 'TP Trolejbus' },
+  { value: 'SP', label: 'SP Specjalny' },
 ];
 
-const FLEET_TYPES = ['miejski', 'podmiejski', 'regionalny', 'szkolny', 'turystyczny'];
-
-// Zaktualizowane statusy
 const VEHICLE_STATUSES = [
   { value: 'eksploatowany',    label: 'Eksploatowany',    color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
   { value: 'wycofany',         label: 'Wycofany',          color: 'text-zinc-400 bg-zinc-800 border-zinc-700' },
@@ -116,10 +113,8 @@ const statusBadge = (value) => {
   return <span className={`px-2 py-1 rounded-md text-xs font-medium border ${s.color}`}>{s.label}</span>;
 };
 
-// Skrót rodzaju pojazdu do wyświetlania w tabeli
 const vehicleTypeBadge = (value) => {
   if (!value) return <span className="text-zinc-600 text-xs">—</span>;
-  const type = VEHICLE_TYPES.find(t => t.value === value);
   return (
     <span className="px-2 py-1 bg-zinc-900 border border-zinc-700 rounded-md text-xs font-bold text-zinc-300 font-mono">
       {value}
@@ -127,17 +122,18 @@ const vehicleTypeBadge = (value) => {
   );
 };
 
+// ZMIANA: usunięte registrationNumber i fleetType
 const emptyVehicle = {
   busNumber: '', brand: '', model: '',
-  vehicleType: '', fleetType: '',
+  vehicleType: '',
   status: 'eksploatowany',
-  yearManufactured: '', registrationNumber: '',
+  yearManufactured: '',
   assignedDriverId: '', notes: '',
   plateImageUrl: ''
 };
 
 // ---------------------------------------------------------
-// FleetForm — zaktualizowany formularz
+// FleetForm — usunięte pola: registrationNumber, fleetType (typ taboru)
 // ---------------------------------------------------------
 const FleetForm = ({ values, onChange, driversList, onSubmit, onCancel, submitLabel, onPlateImageChange, plateImagePreview }) => {
   const field = (name) => ({ value: values[name] || '', onChange: (e) => onChange(name, e.target.value) });
@@ -146,10 +142,9 @@ const FleetForm = ({ values, onChange, driversList, onSubmit, onCancel, submitLa
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
-      {/* Wiersz 1 — identyfikacja */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Wiersz 1 — identyfikacja (bez nr rejestracyjnego) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div><label className={labelCls}>Nr taborowy *</label><input required type="text" placeholder="np. 421" {...field('busNumber')} className={inputCls} /></div>
-        <div><label className={labelCls}>Nr rejestracyjny</label><input type="text" placeholder="np. SY 12345" {...field('registrationNumber')} className={inputCls} /></div>
         <div><label className={labelCls}>Rok produkcji</label><input type="text" placeholder="np. 2019" maxLength={4} {...field('yearManufactured')} className={inputCls} /></div>
       </div>
 
@@ -159,20 +154,13 @@ const FleetForm = ({ values, onChange, driversList, onSubmit, onCancel, submitLa
         <div><label className={labelCls}>Typ / Model *</label><input required type="text" placeholder="np. Urbino 18" {...field('model')} className={inputCls} /></div>
       </div>
 
-      {/* Wiersz 3 — klasyfikacja */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Wiersz 3 — klasyfikacja (bez typ taboru) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className={labelCls}>Rodzaj pojazdu</label>
           <select {...field('vehicleType')} className={inputCls}>
             <option value="">-- wybierz --</option>
             {VEHICLE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className={labelCls}>Typ taboru</label>
-          <select {...field('fleetType')} className={inputCls}>
-            <option value="">-- wybierz --</option>
-            {FLEET_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <div>
@@ -211,7 +199,6 @@ const FleetForm = ({ values, onChange, driversList, onSubmit, onCancel, submitLa
               <span className="text-xs text-zinc-500">Wgraj zdjęcie tablicy</span>
             </div>
           </div>
-          {/* Podgląd aktualnego zdjęcia */}
           {(plateImagePreview || values.plateImageUrl) && (
             <div className="flex-shrink-0">
               <img
@@ -234,7 +221,7 @@ const FleetForm = ({ values, onChange, driversList, onSubmit, onCancel, submitLa
 };
 
 // ---------------------------------------------------------
-// FleetView — zaktualizowany widok
+// FleetView — usunięte kolumna "Tablica" z tekstem rej., fleetType z panelu
 // ---------------------------------------------------------
 const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
   const [showAdd, setShowAdd] = useState(false);
@@ -282,9 +269,9 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
     setEditId(vehicle.id);
     setEditValues({
       busNumber: vehicle.busNumber, brand: vehicle.brand || '', model: vehicle.model,
-      vehicleType: vehicle.vehicleType || '', fleetType: vehicle.fleetType || '',
+      vehicleType: vehicle.vehicleType || '',
       status: vehicle.status || 'eksploatowany', yearManufactured: vehicle.yearManufactured || '',
-      registrationNumber: vehicle.registrationNumber || '', assignedDriverId: vehicle.assignedDriverId || '',
+      assignedDriverId: vehicle.assignedDriverId || '',
       notes: vehicle.notes || '', plateImageUrl: vehicle.plateImageUrl || ''
     });
     setEditPlateFile(null); setEditPlatePreview(null);
@@ -344,8 +331,8 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
           <div className="p-10 text-center text-zinc-500 text-sm">Brak pojazdów w taborze.{isAdmin && ' Dodaj pierwszy wóz przyciskiem powyżej.'}</div>
         ) : (
           <div className="divide-y divide-zinc-800/60">
-            {/* Nagłówek tabeli */}
-            <div className="hidden md:grid px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider" style={{gridTemplateColumns: '60px 1fr 60px 120px 120px 1fr'}}>
+            {/* Nagłówek tabeli — bez kolumny "Tablica" z tekstem */}
+            <div className="hidden md:grid px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider" style={{gridTemplateColumns: '60px 1fr 60px 100px 120px 1fr'}}>
               <div>Nr tab.</div>
               <div>Marka / Model</div>
               <div>Typ</div>
@@ -376,31 +363,30 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
                       className="px-6 py-4 hover:bg-zinc-800/20 transition-colors cursor-pointer"
                       onClick={() => setExpandedId(expandedId === vehicle.id ? null : vehicle.id)}
                     >
-                      <div className="grid items-center gap-3" style={{gridTemplateColumns: '60px 1fr 60px 120px 120px 1fr'}}>
+                      <div className="grid items-center gap-3" style={{gridTemplateColumns: '60px 1fr 60px 100px 120px 1fr'}}>
                         {/* Nr tab */}
                         <span className="inline-flex items-center justify-center w-12 h-10 bg-zinc-950 border border-zinc-800 rounded-xl text-emerald-400 font-bold text-sm font-mono">{vehicle.busNumber}</span>
 
                         {/* Marka / Model */}
                         <div>
                           <p className="text-sm font-medium text-zinc-200">{vehicle.brand ? `${vehicle.brand} ${vehicle.model}` : vehicle.model}</p>
-                          <p className="text-xs text-zinc-600 mt-0.5">{vehicle.fleetType || ''}</p>
                         </div>
 
                         {/* Typ CN/BN/AN/MN */}
                         <div className="hidden md:block">{vehicleTypeBadge(vehicle.vehicleType)}</div>
 
-                        {/* Tablica rejestracyjna — zdjęcie lub tekst */}
+                        {/* Tablica rejestracyjna — tylko zdjęcie, bez tekstu fallback */}
                         <div className="hidden md:block">
                           {vehicle.plateImageUrl ? (
                             <img
                               src={`${API_URL}${vehicle.plateImageUrl}`}
-                              alt={vehicle.registrationNumber || 'Tablica'}
+                              alt="Tablica"
                               className="h-8 rounded-md object-cover border border-zinc-700 cursor-pointer"
-                              style={{ maxWidth: '110px' }}
+                              style={{ maxWidth: '90px' }}
                               onClick={(e) => { e.stopPropagation(); window.open(`${API_URL}${vehicle.plateImageUrl}`, '_blank'); }}
                             />
                           ) : (
-                            <span className="text-xs text-zinc-500 font-mono">{vehicle.registrationNumber || '—'}</span>
+                            <span className="text-xs text-zinc-600">—</span>
                           )}
                         </div>
 
@@ -421,7 +407,7 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
                       </div>
                     </div>
 
-                    {/* Panel rozwinięty */}
+                    {/* Panel rozwinięty — bez fleetType i registrationNumber */}
                     {expandedId === vehicle.id && (
                       <div className="px-6 pb-5 bg-zinc-950/30">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-800/60">
@@ -432,13 +418,10 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
                             <p className="text-xs text-zinc-500 mb-1">Rodzaj pojazdu</p>
                             <div className="flex items-center gap-2">
                               {vehicleTypeBadge(vehicle.vehicleType)}
-                              <span className="text-xs text-zinc-500">{VEHICLE_TYPES.find(t => t.value === vehicle.vehicleType)?.label?.split('—')[1]?.trim() || ''}</span>
+                              <span className="text-xs text-zinc-500">
+                                {VEHICLE_TYPES.find(t => t.value === vehicle.vehicleType)?.label?.replace(vehicle.vehicleType, '').trim() || ''}
+                              </span>
                             </div>
-                          </div>
-                          <div><p className="text-xs text-zinc-500 mb-1">Typ taboru</p><p className="text-sm text-zinc-200">{vehicle.fleetType || '—'}</p></div>
-                          <div>
-                            <p className="text-xs text-zinc-500 mb-1">Nr rejestracyjny</p>
-                            <p className="text-sm text-zinc-200 font-mono">{vehicle.registrationNumber || '—'}</p>
                           </div>
                           <div><p className="text-xs text-zinc-500 mb-1">Rok produkcji</p><p className="text-sm text-zinc-200">{vehicle.yearManufactured || '—'}</p></div>
                           <div><p className="text-xs text-zinc-500 mb-1">Stan</p>{statusBadge(vehicle.status)}</div>
@@ -447,7 +430,6 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
                             <p className="text-sm text-zinc-200">{vehicle.assignedDriverName || 'Brak'}</p>
                           </div>
 
-                          {/* Zdjęcie tablicy w powiększeniu */}
                           {vehicle.plateImageUrl && (
                             <div className="col-span-2 md:col-span-4">
                               <p className="text-xs text-zinc-500 mb-2">Tablica rejestracyjna</p>
@@ -799,7 +781,6 @@ export default function App() {
     try { const response = await authFetch(`${API_URL}/api/reports/${id}/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }) }); if (response.ok) fetchReports(); } catch (err) { console.error(err); }
   };
 
-  // EKRAN LOGOWANIA
   if (!isLoggedIn) {
     return (
       <div className="relative min-h-screen bg-zinc-950 flex items-center justify-center p-4 font-sans text-zinc-100 overflow-hidden">
@@ -822,7 +803,6 @@ export default function App() {
     );
   }
 
-  // GŁÓWNY PANEL
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex justify-center p-4 sm:p-8">
       <div className="w-full max-w-4xl flex flex-col gap-6">
@@ -931,7 +911,6 @@ export default function App() {
           {user.role === 'driver' && !showChangePassword && activeTab === 'schedules' && <SchedulesView />}
           {user.role === 'driver' && !showChangePassword && activeTab === 'messages' && <MessagesView user={user} driversList={driversList} onUnreadCountChange={setUnreadCount} />}
 
-          {/* ADMIN */}
           {user.role === 'admin' && !showChangePassword && (
             <div className="space-y-6 animate-in fade-in duration-500">
               <div className="flex gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-fit overflow-x-auto">
