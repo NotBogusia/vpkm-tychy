@@ -697,9 +697,9 @@ export default function App() {
   }, [isLoggedIn, user, adminSubTab, activeTab]);
 
   const fetchReports = () => authFetch(`${API_URL}/api/reports/pending`).then(r => r.json()).then(d => setPendingReports(d.reports)).catch(console.error);
-  const fetchDrivers = () => authFetch(`${API_URL}/api/drivers`).then(r => r.json()).then(d => setDriversList(d)).catch(console.error);
+  const fetchDrivers = () => authFetch(`${API_URL}/api/drivers`).then(r => r.json()).then(d => setDriversList(Array.isArray(d) ? d : [])).catch(console.error);
   const fetchActiveShifts = () => authFetch(`${API_URL}/api/shifts`).then(r => r.json()).then(d => setActiveShifts(d.shifts || [])).catch(console.error);
-  const fetchFleet = () => authFetch(`${API_URL}/api/fleet`).then(r => r.json()).then(d => setFleet(d)).catch(console.error);
+  const fetchFleet = () => authFetch(`${API_URL}/api/fleet`).then(r => r.json()).then(d => setFleet(Array.isArray(d) ? d : [])).catch(console.error);
   const fetchShiftHistory = (id) => authFetch(`${API_URL}/api/shifts/history/${id}`).then(r => r.json()).then(d => setShiftHistory(d.history || [])).catch(console.error);
 
   const handleCancelShift = async (driverId) => {
