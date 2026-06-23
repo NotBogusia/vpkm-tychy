@@ -377,13 +377,12 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
                         {/* Tablica rejestracyjna — tylko zdjęcie, bez tekstu fallback */}
                         <div className="hidden md:block">
                           {vehicle.plateImageUrl ? (
-                            <img
-                              src={`${API_URL}${vehicle.plateImageUrl}`}
-                              alt="Tablica"
-                              className="h-8 rounded-md object-cover border border-zinc-700 cursor-pointer"
-                              style={{ maxWidth: '90px' }}
-                              onClick={(e) => { e.stopPropagation(); window.open(`${API_URL}${vehicle.plateImageUrl}`, '_blank'); }}
-                            />
+                        <img
+  src={`${API_URL}${vehicle.plateImageUrl}`}
+  alt="Tablica"
+  className="h-8 rounded-md object-cover border border-zinc-700"
+  style={{ maxWidth: '90px' }}
+/>
                           ) : (
                             <span className="text-xs text-zinc-600">—</span>
                           )}
@@ -787,9 +786,7 @@ export default function App() {
         <div className="absolute inset-0 bg-zinc-950/20 backdrop-blur-sm" />
         <div className="relative z-10 w-full max-w-md bg-zinc-900/60 p-8 sm:p-10 rounded-3xl border border-zinc-800/80 backdrop-blur-md shadow-2xl">
           <div className="text-center mb-8">
-            <div className="inline-flex p-3 bg-zinc-950/60 rounded-2xl mb-4 border border-zinc-800/50">
-  <img src="/logo.png" alt="logo" className="h-6 w-6 object-contain" />
-</div>
+            <div className="inline-flex p-3 bg-zinc-950/60 rounded-2xl mb-4 border border-zinc-800/50"><Bus className="h-6 w-6 text-emerald-400" /></div>
             <h1 className="text-2xl font-semibold tracking-tight">vPKM Tychy</h1>
             <p className="text-zinc-400 text-sm mt-1">Panel Pracowniczy</p>
           </div>
