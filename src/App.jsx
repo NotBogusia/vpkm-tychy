@@ -787,9 +787,11 @@ export default function App() {
         <div className="absolute inset-0 bg-zinc-950/20 backdrop-blur-sm" />
         <div className="relative z-10 w-full max-w-md bg-zinc-900/60 p-8 sm:p-10 rounded-3xl border border-zinc-800/80 backdrop-blur-md shadow-2xl">
           <div className="text-center mb-8">
-            <div className="inline-flex p-3 bg-zinc-950/60 rounded-2xl mb-4 border border-zinc-800/50"><Bus className="h-6 w-6 text-emerald-400" /></div>
+            <div className="inline-flex p-3 bg-zinc-950/60 rounded-2xl mb-4 border border-zinc-800/50">
+  <img src="/logo.png" alt="logo" className="h-6 w-6 object-contain" />
+</div>
             <h1 className="text-2xl font-semibold tracking-tight">vPKM Tychy</h1>
-            <p className="text-zinc-400 text-sm mt-1">Portal Pracowniczy</p>
+            <p className="text-zinc-400 text-sm mt-1">Panel Pracowniczy</p>
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
             {loginError && <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> {loginError}</div>}
