@@ -642,6 +642,8 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [adminSubTab, setAdminSubTab] = useState('assign');
+  const [editDriverId, setEditDriverId] = useState(null);
+  const [editDriverValues, setEditDriverValues] = useState({});
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -650,6 +652,7 @@ export default function App() {
   const [driverReportFile, setDriverReportFile] = useState(null);
   const [isUploaded, setIsUploaded] = useState(false);
   const [shiftHistory, setShiftHistory] = useState([]);
+  const [myProfile, setMyProfile] = useState(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -682,26 +685,34 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isLoggedIn, user]);
 
-  useEffect(() => {
-    if (!isLoggedIn || !user) return;
-    if (user.role === 'driver') {
-      authFetch(`${API_URL}/api/shifts/${user.id}`).then(r => r.json()).then(d => setMyShift(d.shift || null)).catch(console.error);
-      fetchShiftHistory(user.id);
-    }
+useEffect(() => {
+  if (!isLoggedIn || !user) return;
+  if (user.role === 'driver') {
+    authFetch(`${API_URL}/api/shifts/${user.id}`).then(r => r.json()).then(d => setMyShift(d.shift || null)).catch(console.error);
+    fetchShiftHistory(user.id);
+    fetchMyProfile();
+  }
+  if (user.role === 'admin') {
+    fetchDrivers(); fetchActiveShifts();
+    if (adminSubTab === 'reports') fetchReports();
+    if (adminSubTab === 'fleet') fetchFleet();
+  }
+  if (user.role === 'driver' && activeTab === 'fleet') { fetchFleet(); fetchDrivers(); }
+}, [isLoggedIn, user, adminSubTab, activeTab]);
     if (user.role === 'admin') {
       fetchDrivers(); fetchActiveShifts();
       if (adminSubTab === 'reports') fetchReports();
       if (adminSubTab === 'fleet') fetchFleet();
     }
     if (user.role === 'driver' && activeTab === 'fleet') { fetchFleet(); fetchDrivers(); }
-  }, [isLoggedIn, user, adminSubTab, activeTab]);
+  } [isLoggedIn, user, adminSubTab, activeTab];
 
   const fetchReports = () => authFetch(`${API_URL}/api/reports/pending`).then(r => r.json()).then(d => setPendingReports(d.reports)).catch(console.error);
   const fetchDrivers = () => authFetch(`${API_URL}/api/drivers`).then(r => r.json()).then(d => setDriversList(Array.isArray(d) ? d : [])).catch(console.error);
   const fetchActiveShifts = () => authFetch(`${API_URL}/api/shifts`).then(r => r.json()).then(d => setActiveShifts(d.shifts || [])).catch(console.error);
   const fetchFleet = () => authFetch(`${API_URL}/api/fleet`).then(r => r.json()).then(d => setFleet(Array.isArray(d) ? d : [])).catch(console.error);
   const fetchShiftHistory = (id) => authFetch(`${API_URL}/api/shifts/history/${id}`).then(r => r.json()).then(d => setShiftHistory(d.history || [])).catch(console.error);
-
+  const fetchMyProfile = () => authFetch(`${API_URL}/api/drivers/me`).then(r => r.json()).then(d => setMyProfile(d)).catch(console.error);
   const handleCancelShift = async (driverId) => {
     if (!confirm('Anulować tę służbę?')) return;
     try { await authFetch(`${API_URL}/api/shifts/${driverId}`, { method: 'DELETE' }); fetchActiveShifts(); } catch (err) { console.error(err); }
@@ -750,6 +761,26 @@ export default function App() {
     if (!confirm('Usunąć tego kierowcę?')) return;
     try { const res = await authFetch(`${API_URL}/api/drivers/${driverId}`, { method: 'DELETE' }); if (res.ok) fetchDrivers(); else alert('Błąd podczas usuwania'); } catch (err) { console.error(err); }
   };
+  const startEditDriver = (d) => {
+  setEditDriverId(d.id);
+  setEditDriverValues({
+    displayName: d.displayName, employeeNumber: d.employeeNumber || '', fullName: d.fullName || '',
+    robloxNick: d.robloxNick || '', position: d.position || '',
+    employmentStatus: d.employmentStatus || 'pracujacy', additionalInfo: d.additionalInfo || '',
+    points: d.points ?? 0, minuses: d.minuses ?? 0
+  });
+};
+
+const handleSaveDriver = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await authFetch(`${API_URL}/api/drivers/${editDriverId}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editDriverValues)
+    });
+    if (res.ok) { setEditDriverId(null); fetchDrivers(); }
+  } catch (err) { console.error(err); }
+};
 
   const handleChangePassword = async (e) => {
     e.preventDefault(); setChangePasswordMsg('');
@@ -803,7 +834,7 @@ export default function App() {
     );
   }
 
-  return (
+  return 
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex justify-center p-4 sm:p-8">
       <div className="w-full max-w-4xl flex flex-col gap-6">
 
@@ -843,6 +874,30 @@ export default function App() {
 
           {user.role === 'driver' && !showChangePassword && activeTab === 'dashboard' && (
             <div className="animate-in fade-in duration-500 space-y-6">
+                {/* 🆕 WKLEJ TUTAJ blok profilu */}
+    {myProfile && (
+      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-4">
+        <h2 className="text-xl font-medium text-zinc-200">Mój profil</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><p className="text-xs text-zinc-500 mb-1">Nr służbowy</p><p className="text-sm text-zinc-200 font-mono">{myProfile.employeeNumber || '—'}</p></div>
+          <div><p className="text-xs text-zinc-500 mb-1">Imię i nazwisko</p><p className="text-sm text-zinc-200">{myProfile.fullName || '—'}</p></div>
+          <div><p className="text-xs text-zinc-500 mb-1">Nick Roblox</p><p className="text-sm text-zinc-200">{myProfile.robloxNick || '—'}</p></div>
+          <div><p className="text-xs text-zinc-500 mb-1">Stanowisko</p><p className="text-sm text-zinc-200">{myProfile.position || '—'}</p></div>
+          <div>
+            <p className="text-xs text-zinc-500 mb-1">Status</p>
+            <span className={`px-2 py-1 rounded-md text-xs font-medium border ${myProfile.employmentStatus === 'pracujacy' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>
+              {myProfile.employmentStatus === 'pracujacy' ? 'Pracujący' : 'Zwolniony'}
+            </span>
+          </div>
+          <div><p className="text-xs text-zinc-500 mb-1">Punkty</p><p className="text-sm font-medium text-emerald-400">{myProfile.points ?? 0}</p></div>
+          <div><p className="text-xs text-zinc-500 mb-1">Minusy</p><p className="text-sm font-medium text-red-400">{myProfile.minuses ?? 0}</p></div>
+        </div>
+        {myProfile.additionalInfo && (
+          <div><p className="text-xs text-zinc-500 mb-1">Dodatkowe informacje</p><p className="text-sm text-zinc-300 bg-zinc-950/50 border border-zinc-800 rounded-xl px-4 py-2.5">{myProfile.additionalInfo}</p></div>
+        )}
+      </div>
+    )}
+    {/* 🆕 KONIEC bloku profilu */}
               <div>
                 <h2 className="text-xl font-medium mb-4 text-zinc-200">Bieżąca dyspozycja</h2>
                 {myShift ? (
@@ -927,36 +982,70 @@ export default function App() {
               </div>
 
               {adminSubTab === 'crew' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 h-fit">
-                    <h2 className="text-xl font-medium text-zinc-200 mb-4 flex items-center gap-2"><UserPlus className="w-5 h-5 text-emerald-400" /> Dodaj kierowcę</h2>
-                    {newDriverSuccess ? (
-                      <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-sm text-center">Konto zostało pomyślnie utworzone!</div>
-                    ) : (
-                      <form onSubmit={handleAddDriver} className="space-y-4">
-                        <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Nick / Imię w grze</label><input required type="text" placeholder="np. Kacper Nowak" value={newDriverName} onChange={(e) => setNewDriverName(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50" /></div>
-                        <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Login do panelu</label><input required type="text" placeholder="np. kacper" value={newDriverLogin} onChange={(e) => setNewDriverLogin(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50" /></div>
-                        <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Hasło</label><input required type="password" placeholder="np. vPKM123" value={newDriverPass} onChange={(e) => setNewDriverPass(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50" /></div>
-                        <button type="submit" className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm mt-2">Stwórz konto</button>
-                      </form>
-                    )}
-                  </div>
-                  <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8">
-                    <h2 className="text-xl font-medium text-zinc-200 mb-4">Zatrudnieni</h2>
-                    <div className="space-y-2">
-                      {driversList.length === 0 ? <p className="text-sm text-zinc-500">Brak zarejestrowanych kierowców.</p> : driversList.map(d => (
-                        <div key={d.id} className="flex justify-between items-center p-3 bg-zinc-950 border border-zinc-800/80 rounded-xl">
-                          <div><p className="font-medium text-sm text-zinc-200">{d.displayName}</p><p className="text-xs text-zinc-500">Login: {d.login}</p></div>
-                          <div className="flex items-center gap-2">
-                            <span className="px-2 py-1 bg-zinc-800 text-zinc-400 rounded-md text-xs font-medium">Kierowca</span>
-                            <button onClick={() => handleDeleteDriver(d.id)} className="p-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-colors"><UserX className="w-4 h-4" /></button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 h-fit">
+      <h2 className="text-xl font-medium text-zinc-200 mb-4 flex items-center gap-2"><UserPlus className="w-5 h-5 text-emerald-400" /> Dodaj kierowcę</h2>
+      {newDriverSuccess ? (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-sm text-center">Konto zostało pomyślnie utworzone!</div>
+      ) : (
+        <form onSubmit={handleAddDriver} className="space-y-4">
+          <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Nick / Imię w grze</label><input required type="text" placeholder="np. Kacper Nowak" value={newDriverName} onChange={(e) => setNewDriverName(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50" /></div>
+          <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Login do panelu</label><input required type="text" placeholder="np. kacper" value={newDriverLogin} onChange={(e) => setNewDriverLogin(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50" /></div>
+          <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Hasło</label><input required type="password" placeholder="np. vPKM123" value={newDriverPass} onChange={(e) => setNewDriverPass(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50" /></div>
+          <button type="submit" className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm mt-2">Stwórz konto</button>
+        </form>
+      )}
+    </div>
+
+    <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8">
+      <h2 className="text-xl font-medium text-zinc-200 mb-4">Zatrudnieni</h2>
+      <div className="space-y-2">
+        {driversList.length === 0 ? <p className="text-sm text-zinc-500">Brak zarejestrowanych kierowców.</p> : driversList.map(d => (
+          <div key={d.id} className="p-3 bg-zinc-950 border border-zinc-800/80 rounded-xl">
+            {editDriverId === d.id ? (
+              <form onSubmit={handleSaveDriver} className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <input placeholder="Nr służbowy" value={editDriverValues.employeeNumber} onChange={e => setEditDriverValues(v => ({...v, employeeNumber: e.target.value}))} className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 text-sm" />
+                  <input placeholder="Imię i nazwisko" value={editDriverValues.fullName} onChange={e => setEditDriverValues(v => ({...v, fullName: e.target.value}))} className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 text-sm" />
+                  <input placeholder="Nick Roblox" value={editDriverValues.robloxNick} onChange={e => setEditDriverValues(v => ({...v, robloxNick: e.target.value}))} className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 text-sm" />
+                  <input placeholder="Stanowisko" value={editDriverValues.position} onChange={e => setEditDriverValues(v => ({...v, position: e.target.value}))} className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 text-sm" />
+                  <select value={editDriverValues.employmentStatus} onChange={e => setEditDriverValues(v => ({...v, employmentStatus: e.target.value}))} className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 text-sm">
+                    <option value="pracujacy">Pracujący</option>
+                    <option value="zwolniony">Zwolniony</option>
+                  </select>
+                  <input type="number" placeholder="Punkty" value={editDriverValues.points} onChange={e => setEditDriverValues(v => ({...v, points: e.target.value}))} className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 text-sm" />
+                  <input type="number" placeholder="Minusy" value={editDriverValues.minuses} onChange={e => setEditDriverValues(v => ({...v, minuses: e.target.value}))} className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 text-sm" />
+                </div>
+                <input placeholder="Dodatkowe informacje" value={editDriverValues.additionalInfo} onChange={e => setEditDriverValues(v => ({...v, additionalInfo: e.target.value}))} className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 text-sm" />
+                <div className="flex gap-2">
+                  <button type="submit" className="px-4 py-2 bg-zinc-100 text-zinc-900 rounded-lg text-xs font-medium">Zapisz</button>
+                  <button type="button" onClick={() => setEditDriverId(null)} className="px-4 py-2 bg-zinc-800 text-zinc-400 rounded-lg text-xs">Anuluj</button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-medium text-sm text-zinc-200">{d.fullName || d.displayName} {d.employeeNumber && <span className="text-zinc-500 font-mono text-xs">#{d.employeeNumber}</span>}</p>
+                  <p className="text-xs text-zinc-500">Login: {d.login} {d.robloxNick && `· Roblox: ${d.robloxNick}`}</p>
+                  <p className="text-xs text-zinc-500">{d.position || '—'}</p>
+                  <div className="flex gap-2 mt-1">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${d.employmentStatus === 'pracujacy' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>{d.employmentStatus === 'pracujacy' ? 'Pracujący' : 'Zwolniony'}</span>
+                    <span className="text-[10px] text-emerald-400">+{d.points ?? 0}</span>
+                    <span className="text-[10px] text-red-400">-{d.minuses ?? 0}</span>
                   </div>
                 </div>
-              )}
+                <div className="flex items-center gap-2">
+                  <button onClick={() => startEditDriver(d)} className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-zinc-200"><Pencil className="w-4 h-4" /></button>
+                  <button onClick={() => handleDeleteDriver(d.id)} className="p-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20"><UserX className="w-4 h-4" /></button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
 
               {adminSubTab === 'assign' && (
                 <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8">
@@ -1047,5 +1136,4 @@ export default function App() {
         </main>
       </div>
     </div>
-  );
-}
+  
