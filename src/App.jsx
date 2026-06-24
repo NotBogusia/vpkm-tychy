@@ -699,13 +699,6 @@ useEffect(() => {
   }
   if (user.role === 'driver' && activeTab === 'fleet') { fetchFleet(); fetchDrivers(); }
 }, [isLoggedIn, user, adminSubTab, activeTab]);
-    if (user.role === 'admin') {
-      fetchDrivers(); fetchActiveShifts();
-      if (adminSubTab === 'reports') fetchReports();
-      if (adminSubTab === 'fleet') fetchFleet();
-    }
-    if (user.role === 'driver' && activeTab === 'fleet') { fetchFleet(); fetchDrivers(); }
-  } [isLoggedIn, user, adminSubTab, activeTab];
 
   const fetchReports = () => authFetch(`${API_URL}/api/reports/pending`).then(r => r.json()).then(d => setPendingReports(d.reports)).catch(console.error);
   const fetchDrivers = () => authFetch(`${API_URL}/api/drivers`).then(r => r.json()).then(d => setDriversList(Array.isArray(d) ? d : [])).catch(console.error);
@@ -1137,3 +1130,4 @@ const handleSaveDriver = async (e) => {
       </div>
     </div>
   );
+}
