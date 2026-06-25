@@ -818,7 +818,7 @@ const handleAssignShift = async (e) => {
         <div className="absolute inset-0 bg-zinc-950/20 backdrop-blur-sm" />
         <div className="relative z-10 w-full max-w-md bg-zinc-900/60 p-8 sm:p-10 rounded-3xl border border-zinc-800/80 backdrop-blur-md shadow-2xl">
           <div className="text-center mb-8">
-            <div className="inline-flex p-3 bg-gzm-yellow/10 rounded-2xl mb-4 border border-gzm-yellow/20">
+            <div className="inline-flex p-3 bg-zinc-950/60 rounded-2xl mb-4 border border-zinc-800/50">
   <img src="/logo.png" alt="logo" className="h-6 w-6 object-contain" />
 </div>
             <h1 className="text-2xl font-semibold tracking-tight">vPKM Tychy</h1>
@@ -1049,95 +1049,211 @@ const handleAssignShift = async (e) => {
 )}
 
               {adminSubTab === 'assign' && (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8">
-                  <h2 className="text-xl font-medium text-zinc-200 mb-6">Kreator dyspozycji</h2>
-                  {assignSuccess ? (
-                    <div className="py-12 flex flex-col items-center text-center"><div className="w-16 h-16 bg-gzm-yellow/10 text-gzm-yellow rounded-full flex items-center justify-center mb-4"><CheckCircle className="w-8 h-8" /></div><h3 className="text-lg font-medium text-white">Służba przypisana poprawnie!</h3></div>
-                  ) : (
-                    <form onSubmit={handleAssignShift} className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <div>
-                            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Wybierz Kierowcę</label>
-                            <select required value={assignDriverId} onChange={(e) => setAssignDriverId(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/50">
-                              <option value="">-- Kto dzisiaj jeździ? --</option>
-                              {driversList.map(d => <option key={d.id} value={d.id}>{d.displayName} ({d.login})</option>)}
-                            </select>
-                            {driversList.length === 0 && <p className="text-[10px] text-red-400 mt-1">Najpierw musisz dodać kierowcę w zakładce "Kierowcy".</p>}
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Kategoria rozkładu</label>
-  <select value={assignCategory} onChange={(e) => { setAssignCategory(e.target.value); setAssignLine(''); setAssignScheduleFile(''); }} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
-  <option value="weekday">Dni robocze</option>
-  <option value="saturday">Sobotnie</option>
-  <option value="sunday">Niedzielne</option>
-</select>
-</div>
-<div>
-  <label className="block text-xs font-medium text-zinc-500 mb-1.5">Linia (z rozkładu)</label>
-  <select required value={assignLine} onChange={(e) => {
-    const lines = assignCategory === 'weekday' ? WEEKDAY_LINES : assignCategory === 'saturday' ? SATURDAY_LINES : SUNDAY_LINES;
-    const selected = lines.find(l => l.label === e.target.value);
-    setAssignLine(e.target.value);
-    setAssignScheduleFile(selected ? selected.file : '');
-  }} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
-    <option value="">-- Wybierz linię --</option>
-    {(assignCategory === 'weekday' ? WEEKDAY_LINES : assignCategory === 'saturday' ? SATURDAY_LINES : SUNDAY_LINES).map(l => <option key={l.file} value={l.label}>{l.label}</option>)}
-  </select>
-  {(assignCategory === 'weekday' ? WEEKDAY_LINES.length === 0 : false) && (
-    <p className="text-[10px] text-amber-400/80 mt-1">Brak rozkładów dla dni roboczych — zostaną dodane wkrótce.</p>
-  )}
-</div>
-<div>
-  <label className="block text-xs font-medium text-zinc-500 mb-1.5">Przydziel Wóz</label>
-  <select required value={assignBusId} onChange={(e) => setAssignBusId(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
-    <option value="">-- Wybierz pojazd --</option>
-    {fleet.map(v => <option key={v.id} value={v.id}>{v.brand} {v.model} (#{v.busNumber})</option>)}
-  </select>
-</div>
-<div>
-  <label className="block text-xs font-medium text-zinc-500 mb-1.5">Zmiana</label>
-  <select value={assignShift} onChange={(e) => setAssignShift(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
-    <option value="">-- Wybierz zmianę --</option>
-    <option value="A">Zmiana A</option>
-    <option value="B">Zmiana B</option>
-    <option value="A+B">Zmiana A+B</option>
-  </select>
-</div>
-<div>
-  <label className="block text-xs font-medium text-zinc-500 mb-1.5">Notatka (opcjonalnie)</label>
-  <input type="text" placeholder="np. uwagi dla kierowcy" value={assignNote} onChange={(e) => setAssignNote(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none" />
-</div>
+  <div className="space-y-4">
 
-                        </div>
-                        <div className="space-y-4 flex flex-col">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Rozpoczęcie</label><input required type="time" value={assignStart} onChange={(e) => setAssignStart(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-400 text-sm focus:outline-none" /></div>
-                            <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Zakończenie</label><input required type="time" value={assignEnd} onChange={(e) => setAssignEnd(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-400 text-sm focus:outline-none" /></div>
-                          </div>
-                    
-                        </div>
-                      </div>
-                      <div className="pt-4 border-t border-zinc-800/80"><button type="submit" disabled={driversList.length === 0} className="px-8 py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm flex items-center gap-2 disabled:bg-zinc-800 disabled:text-zinc-600"><Plus className="w-4 h-4" /> Wyślij dyspozycję</button></div>
-                    </form>
-                  )}
-                  <div className="mt-8 border-t border-zinc-800 pt-6">
-                    <h3 className="text-sm font-medium text-zinc-400 mb-3">Aktywne służby</h3>
-                    {activeShifts.length === 0 ? <p className="text-xs text-zinc-600">Brak aktywnych służb.</p> : (
-                      <div className="space-y-2">
-                        {activeShifts.map(s => (
-                          <div key={s.id} className="flex items-center justify-between p-3 bg-zinc-950 border border-zinc-800 rounded-xl">
-                            <div><p className="text-sm font-medium text-zinc-200">{s.driverName}</p><p className="text-xs text-zinc-500">Linia {s.line} | Brygada {s.brigade} | {s.startTime}–{s.endTime}</p></div>
-                            <button onClick={() => handleCancelShift(s.driverId)} className="p-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20"><XCircle className="w-4 h-4" /></button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+    {/* KREATOR */}
+    <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-3xl overflow-hidden backdrop-blur-sm">
+
+      {/* Nagłówek karty */}
+      <div className="px-6 pt-6 pb-5 border-b border-zinc-800/50">
+        <h2 className="text-base font-semibold text-zinc-100 tracking-tight">Nowa dyspozycja</h2>
+        <p className="text-xs text-zinc-500 mt-0.5">Wypełnij pola i wyślij służbę kierowcy</p>
+      </div>
+
+      {assignSuccess ? (
+        <div className="py-16 flex flex-col items-center text-center px-6">
+          <div className="w-14 h-14 bg-gzm-yellow/10 rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="w-7 h-7 text-gzm-yellow" />
+          </div>
+          <h3 className="text-base font-semibold text-zinc-100">Służba przypisana</h3>
+          <p className="text-xs text-zinc-500 mt-1">Kierowca zobaczy dyspozycję po zalogowaniu</p>
+        </div>
+      ) : (
+        <form onSubmit={handleAssignShift} className="p-6 space-y-3">
+
+          {/* Kierowca */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Kierowca</label>
+            <select
+              required
+              value={assignDriverId}
+              onChange={(e) => setAssignDriverId(e.target.value)}
+              className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/40 transition-colors appearance-none"
+            >
+              <option value="">Wybierz kierowcę…</option>
+              {driversList.map(d => <option key={d.id} value={d.id}>{d.displayName} ({d.login})</option>)}
+            </select>
+            {driversList.length === 0 && <p className="text-[10px] text-red-400">Najpierw dodaj kierowcę w zakładce Kierowcy.</p>}
+          </div>
+
+          {/* Separator */}
+          <div className="h-px bg-zinc-800/50 my-1" />
+
+          {/* Kategoria + Linia — dwa w rzędzie */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Kategoria</label>
+              <select
+                value={assignCategory}
+                onChange={(e) => { setAssignCategory(e.target.value); setAssignLine(''); setAssignScheduleFile(''); }}
+                className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/40 transition-colors appearance-none"
+              >
+                <option value="weekday">Dni robocze</option>
+                <option value="saturday">Sobotnie</option>
+                <option value="sunday">Niedzielne</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Linia</label>
+              {(assignCategory === 'weekday' ? WEEKDAY_LINES : assignCategory === 'saturday' ? SATURDAY_LINES : SUNDAY_LINES).length > 0 ? (
+                <select
+                  required
+                  value={assignLine}
+                  onChange={(e) => {
+                    const lines = assignCategory === 'weekday' ? WEEKDAY_LINES : assignCategory === 'saturday' ? SATURDAY_LINES : SUNDAY_LINES;
+                    const selected = lines.find(l => l.label === e.target.value);
+                    setAssignLine(e.target.value);
+                    setAssignScheduleFile(selected ? selected.file : '');
+                  }}
+                  className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/40 transition-colors appearance-none"
+                >
+                  <option value="">Wybierz linię…</option>
+                  {(assignCategory === 'weekday' ? WEEKDAY_LINES : assignCategory === 'saturday' ? SATURDAY_LINES : SUNDAY_LINES).map(l => (
+                    <option key={l.file} value={l.label}>{l.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  required
+                  type="text"
+                  placeholder="Wpisz nr linii…"
+                  value={assignLine}
+                  onChange={(e) => setAssignLine(e.target.value)}
+                  className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/40 transition-colors"
+                />
               )}
+            </div>
+          </div>
 
-              {adminSubTab === 'reports' && (
+          {/* Pojazd + Zmiana — dwa w rzędzie */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Pojazd</label>
+              <select
+                required
+                value={assignBusId}
+                onChange={(e) => setAssignBusId(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/40 transition-colors appearance-none"
+              >
+                <option value="">Wybierz pojazd…</option>
+                {fleet.map(v => <option key={v.id} value={v.id}>{v.brand} {v.model} (#{v.busNumber})</option>)}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Zmiana</label>
+              <select
+                value={assignShift}
+                onChange={(e) => setAssignShift(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/40 transition-colors appearance-none"
+              >
+                <option value="">Wybierz zmianę…</option>
+                <option value="A">Zmiana A</option>
+                <option value="B">Zmiana B</option>
+                <option value="A+B">Zmiana A+B</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Godziny — dwa w rzędzie */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Rozpoczęcie</label>
+              <input
+                required
+                type="time"
+                value={assignStart}
+                onChange={(e) => setAssignStart(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-300 text-sm focus:outline-none focus:border-gzm-yellow/40 transition-colors"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Zakończenie</label>
+              <input
+                required
+                type="time"
+                value={assignEnd}
+                onChange={(e) => setAssignEnd(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-300 text-sm focus:outline-none focus:border-gzm-yellow/40 transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Notatka */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Notatka <span className="normal-case text-zinc-600">(opcjonalnie)</span></label>
+            <input
+              type="text"
+              placeholder="np. uwagi dla kierowcy"
+              value={assignNote}
+              onChange={(e) => setAssignNote(e.target.value)}
+              className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/40 transition-colors"
+            />
+          </div>
+
+          {/* Przycisk */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={driversList.length === 0}
+              className="w-full py-3.5 bg-gzm-yellow hover:bg-gzm-yellow-dark text-zinc-900 font-semibold rounded-2xl text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> Wyślij dyspozycję
+            </button>
+          </div>
+
+        </form>
+      )}
+    </div>
+
+    {/* AKTYWNE SŁUŻBY */}
+    <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-3xl overflow-hidden backdrop-blur-sm">
+      <div className="px-6 pt-5 pb-4 border-b border-zinc-800/50 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-zinc-300">Aktywne służby</h3>
+        <span className="text-xs text-zinc-600">{activeShifts.length} aktywnych</span>
+      </div>
+      {activeShifts.length === 0 ? (
+        <div className="px-6 py-8 text-center text-zinc-600 text-xs">Brak aktywnych służb.</div>
+      ) : (
+        <div className="divide-y divide-zinc-800/40">
+          {activeShifts.map(s => (
+            <div key={s.id} className="px-6 py-4 flex items-center justify-between gap-4 hover:bg-zinc-800/20 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-gzm-yellow/10 border border-gzm-yellow/20 rounded-xl flex items-center justify-center text-xs font-bold text-gzm-yellow font-mono">
+                  {s.line}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-zinc-200">{s.driverName}</p>
+                  <p className="text-xs text-zinc-500">{s.startTime}–{s.endTime} · {s.bus}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleCancelShift(s.driverId)}
+                className="p-2 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
+                title="Anuluj służbę"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+  </div>
+)}
+{adminSubTab === 'reports' && (
                 <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
                   <div className="p-6 border-b border-zinc-800/80"><h2 className="text-xl font-medium text-zinc-200">Karty drogowe do weryfikacji</h2></div>
                   {pendingReports.length === 0 ? <div className="p-10 text-center text-zinc-500 text-sm">Wszystkie raporty zostały sprawdzone.</div> : (
