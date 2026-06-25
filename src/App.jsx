@@ -662,8 +662,6 @@ export default function App() {
   const [assignLine, setAssignLine] = useState('');
   const [assignScheduleFile, setAssignScheduleFile] = useState('');
   const [assignNote, setAssignNote] = useState(''); // opcjonalna notatka, zamiast brygady
-  const [assignBusId, setAssignBusId] = useState('');
-  const [assignScheduleFile, setAssignScheduleFile] = useState('');
   const [assignStart, setAssignStart] = useState('');
   const [assignEnd, setAssignEnd] = useState('');
   const [assignBusId, setAssignBusId] = useState('');
