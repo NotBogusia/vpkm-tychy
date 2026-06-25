@@ -2,4 +2,9 @@
 
 @theme {
   --font-inter: 'Inter', sans-serif;
+  --color-gzm-yellow: #FFE75C;
+  --color-gzm-yellow-dark: #FFD13E;
+  --color-gzm-yellow-light: #FCF299;
+  --color-gzm-black: #1C1C1C;
+  --color-gzm-dark: #111111;
 }

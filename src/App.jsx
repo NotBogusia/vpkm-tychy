@@ -40,7 +40,7 @@ const SchedulesView = () => {
   const LineRow = ({ label, file }) => (
     <div className="flex items-center justify-between px-6 py-4 hover:bg-zinc-800/20 transition-colors">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-zinc-950 border border-zinc-800 rounded-lg flex items-center justify-center"><FileText className="w-4 h-4 text-emerald-400" /></div>
+        <div className="w-8 h-8 bg-zinc-950 border border-zinc-800 rounded-lg flex items-center justify-center"><FileText className="w-4 h-4 text-gzm-yellow" /></div>
         <span className="text-sm font-medium text-zinc-200">{label}</span>
       </div>
       <button onClick={() => openPdf(file)} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-medium transition-colors border border-zinc-700">
@@ -51,7 +51,7 @@ const SchedulesView = () => {
   const currentLines = subTab === 'weekday' ? WEEKDAY_LINES : subTab === 'saturday' ? SATURDAY_LINES : SUNDAY_LINES;
   return (
     <div className="animate-in fade-in duration-500 space-y-4">
-      <h2 className="text-xl font-medium text-zinc-200 flex items-center gap-2"><BookOpen className="w-5 h-5 text-emerald-400" /> Rozkłady jazdy</h2>
+      <h2 className="text-xl font-medium text-zinc-200 flex items-center gap-2"><BookOpen className="w-5 h-5 text-gzm-yellow" /> Rozkłady jazdy</h2>
       <div className="flex gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-fit">
         <button onClick={() => setSubTab('weekday')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${subTab === 'weekday' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Calendar className="w-4 h-4" /> Dni robocze</button>
         <button onClick={() => setSubTab('saturday')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${subTab === 'saturday' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Calendar className="w-4 h-4" /> Sobotnie</button>
@@ -87,7 +87,7 @@ const VEHICLE_TYPES = [
 ];
 
 const VEHICLE_STATUSES = [
-  { value: 'eksploatowany',    label: 'Eksploatowany',    color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  { value: 'eksploatowany',    label: 'Eksploatowany',    color: 'text-gzm-yellow bg-gzm-yellow/10 border-gzm-yellow/20' },
   { value: 'wycofany',         label: 'Wycofany',          color: 'text-zinc-400 bg-zinc-800 border-zinc-700' },
   { value: 'warsztat',         label: 'Warsztat',          color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
   { value: 'skasowany',        label: 'Skasowany',         color: 'text-red-400 bg-red-500/10 border-red-500/20' },
@@ -125,7 +125,7 @@ const emptyVehicle = {
 // ---------------------------------------------------------
 const FleetForm = ({ values, onChange, driversList, onSubmit, onCancel, submitLabel, onPlateImageChange, plateImagePreview }) => {
   const field = (name) => ({ value: values[name] || '', onChange: (e) => onChange(name, e.target.value) });
-  const inputCls = "w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50";
+  const inputCls = "w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/50";
   const labelCls = "block text-xs font-medium text-zinc-500 mb-1.5";
 
   return (
@@ -183,7 +183,7 @@ const FleetForm = ({ values, onChange, driversList, onSubmit, onCancel, submitLa
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
             <div className="flex flex-col items-center gap-1 text-center px-4">
-              <Image className="w-5 h-5 text-zinc-600 group-hover:text-emerald-400" />
+              <Image className="w-5 h-5 text-zinc-600 group-hover:text-gzm-yellow" />
               <span className="text-xs text-zinc-500">Wgraj zdjęcie tablicy</span>
             </div>
           </div>
@@ -300,7 +300,7 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
 
       {isAdmin && showAdd && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
-          <h3 className="text-sm font-medium text-zinc-300 mb-5 flex items-center gap-2"><Truck className="w-4 h-4 text-emerald-400" /> Nowy pojazd</h3>
+          <h3 className="text-sm font-medium text-zinc-300 mb-5 flex items-center gap-2"><Truck className="w-4 h-4 text-gzm-yellow" /> Nowy pojazd</h3>
           <FleetForm
             values={addValues}
             onChange={(n, v) => setAddValues(x => ({ ...x, [n]: v }))}
@@ -353,7 +353,7 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
                     >
                       <div className="grid items-center gap-3" style={{gridTemplateColumns: '60px 1fr 60px 100px 120px 1fr'}}>
                         {/* Nr tab */}
-                        <span className="inline-flex items-center justify-center w-12 h-10 bg-zinc-950 border border-zinc-800 rounded-xl text-emerald-400 font-bold text-sm font-mono">{vehicle.busNumber}</span>
+                        <span className="inline-flex items-center justify-center w-12 h-10 bg-zinc-950 border border-zinc-800 rounded-xl text-gzm-yellow font-bold text-sm font-mono">{vehicle.busNumber}</span>
 
                         {/* Marka / Model */}
                         <div>
@@ -458,8 +458,8 @@ const ChangePasswordForm = ({ currentPassword, setCurrentPassword, newPassword, 
     <h2 className="text-xl font-medium mb-4 text-zinc-200">Zmiana hasła</h2>
     <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-md">
       <form onSubmit={onSubmit} className="space-y-4">
-        <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Obecne hasło</label><input required type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50" /></div>
-        <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Nowe hasło (min. 6 znaków)</label><input required type="password" minLength={6} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50" /></div>
+        <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Obecne hasło</label><input required type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/50" /></div>
+        <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Nowe hasło (min. 6 znaków)</label><input required type="password" minLength={6} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/50" /></div>
         {changePasswordMsg && <p className="text-sm text-zinc-300">{changePasswordMsg}</p>}
         <button type="submit" className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm">Zmień hasło</button>
       </form>
@@ -535,27 +535,27 @@ const MessagesView = ({ user, driversList, onUnreadCountChange }) => {
   return (
     <div className="animate-in fade-in duration-500 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-medium text-zinc-200 flex items-center gap-2"><MessageSquare className="w-5 h-5 text-emerald-400" /> Komunikaty</h2>
+        <h2 className="text-xl font-medium text-zinc-200 flex items-center gap-2"><MessageSquare className="w-5 h-5 text-gzm-yellow" /> Komunikaty</h2>
         {!isAdmin && unreadMessages.length > 0 && <button onClick={handleReadAll} className="text-xs text-zinc-400 hover:text-zinc-200 underline underline-offset-2">Oznacz wszystkie jako przeczytane</button>}
       </div>
       {isAdmin && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
-          <h3 className="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2"><Send className="w-4 h-4 text-emerald-400" /> Nowy komunikat</h3>
+          <h3 className="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2"><Send className="w-4 h-4 text-gzm-yellow" /> Nowy komunikat</h3>
           {sendSuccess ? (
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-sm text-center">✅ Komunikat wysłany!</div>
+            <div className="p-4 bg-gzm-yellow/10 border border-gzm-yellow/20 text-gzm-yellow rounded-xl text-sm text-center">✅ Komunikat wysłany!</div>
           ) : (
             <form onSubmit={handleSend} className="space-y-4">
-              <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={isGlobal} onChange={(e) => { setIsGlobal(e.target.checked); setNewToId(''); }} className="w-4 h-4 rounded accent-emerald-400" /><span className="text-sm text-zinc-300">Do wszystkich kierowców</span></label>
+              <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={isGlobal} onChange={(e) => { setIsGlobal(e.target.checked); setNewToId(''); }} className="w-4 h-4 rounded accent-gzm-yellow" /><span className="text-sm text-zinc-300">Do wszystkich kierowców</span></label>
               {!isGlobal && (
                 <div>
                   <label className="block text-xs font-medium text-zinc-500 mb-1.5">Odbiorca</label>
-                  <select required={!isGlobal} value={newToId} onChange={(e) => setNewToId(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50">
+                  <select required={!isGlobal} value={newToId} onChange={(e) => setNewToId(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/50">
                     <option value="">-- Wybierz kierowcę --</option>
                     {driversList.map(d => <option key={d.id} value={d.id}>{d.displayName} ({d.login})</option>)}
                   </select>
                 </div>
               )}
-              <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Treść komunikatu</label><textarea required rows={3} value={newContent} onChange={(e) => setNewContent(e.target.value)} placeholder="Wpisz treść komunikatu..." className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50 resize-none" /></div>
+              <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Treść komunikatu</label><textarea required rows={3} value={newContent} onChange={(e) => setNewContent(e.target.value)} placeholder="Wpisz treść komunikatu..." className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/50 resize-none" /></div>
               <button type="submit" disabled={sending} className="flex items-center gap-2 px-6 py-2.5 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm transition-colors disabled:opacity-60"><Send className="w-4 h-4" /> {sending ? 'Wysyłanie...' : 'Wyślij komunikat'}</button>
             </form>
           )}
@@ -571,13 +571,13 @@ const MessagesView = ({ user, driversList, onUnreadCountChange }) => {
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider px-1">Nieodczytane</p>
                   {unreadMessages.map(m => (
-                    <div key={m.id} className="bg-zinc-900 border border-emerald-500/20 rounded-2xl p-4">
+                    <div key={m.id} className="bg-zinc-900 border border-gzm-yellow/20 rounded-2xl p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2"><span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span><span className="text-xs font-medium text-emerald-400">{m.isGlobal ? '📢 Ogłoszenie dla wszystkich' : `Od: ${m.fromName}`}</span><span className="text-xs text-zinc-600 ml-auto">{formatDate(m.createdAt)}</span></div>
+                          <div className="flex items-center gap-2 mb-2"><span className="w-2 h-2 rounded-full bg-gzm-yellow flex-shrink-0"></span><span className="text-xs font-medium text-gzm-yellow">{m.isGlobal ? '📢 Ogłoszenie dla wszystkich' : `Od: ${m.fromName}`}</span><span className="text-xs text-zinc-600 ml-auto">{formatDate(m.createdAt)}</span></div>
                           <p className="text-sm text-zinc-200 leading-relaxed">{m.content}</p>
                         </div>
-                        <button onClick={() => handleRead(m.id)} className="flex-shrink-0 p-1.5 text-zinc-500 hover:text-emerald-400 transition-colors"><CheckCircle className="w-4 h-4" /></button>
+                        <button onClick={() => handleRead(m.id)} className="flex-shrink-0 p-1.5 text-zinc-500 hover:text-gzm-yellow transition-colors"><CheckCircle className="w-4 h-4" /></button>
                       </div>
                     </div>
                   ))}
@@ -607,7 +607,7 @@ const MessagesView = ({ user, driversList, onUnreadCountChange }) => {
                 <div key={m.id} className="px-5 py-4 flex items-start justify-between gap-4 hover:bg-zinc-800/20 transition-colors">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      {m.isGlobal ? <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md text-xs font-medium">📢 Dla wszystkich</span> : <span className="px-2 py-0.5 bg-zinc-800 text-zinc-300 rounded-md text-xs font-medium">→ {m.toName}</span>}
+                      {m.isGlobal ? <span className="px-2 py-0.5 bg-gzm-yellow/10 text-gzm-yellow border border-gzm-yellow/20 rounded-md text-xs font-medium">📢 Dla wszystkich</span> : <span className="px-2 py-0.5 bg-zinc-800 text-zinc-300 rounded-md text-xs font-medium">→ {m.toName}</span>}
                       <span className="text-xs text-zinc-600">{formatDate(m.createdAt)}</span>
                     </div>
                     <p className="text-sm text-zinc-300 leading-relaxed">{m.content}</p>
@@ -813,12 +813,12 @@ const handleAssignShift = async (e) => {
 
   if (!isLoggedIn) {
     return (
-      <div className="relative min-h-screen bg-zinc-950 flex items-center justify-center p-4 font-inter text-zinc-100 overflow-hidden">
+      <div className="relative min-h-screen bg-gzm-black flex items-center justify-center p-4 font-inter text-zinc-100 overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url('/bg-login.jpg')` }} />
         <div className="absolute inset-0 bg-zinc-950/20 backdrop-blur-sm" />
         <div className="relative z-10 w-full max-w-md bg-zinc-900/60 p-8 sm:p-10 rounded-3xl border border-zinc-800/80 backdrop-blur-md shadow-2xl">
           <div className="text-center mb-8">
-            <div className="inline-flex p-3 bg-zinc-950/60 rounded-2xl mb-4 border border-zinc-800/50">
+            <div className="inline-flex p-3 bg-gzm-yellow/10 rounded-2xl mb-4 border border-gzm-yellow/20">
   <img src="/logo.png" alt="logo" className="h-6 w-6 object-contain" />
 </div>
             <h1 className="text-2xl font-semibold tracking-tight">vPKM Tychy</h1>
@@ -826,8 +826,8 @@ const handleAssignShift = async (e) => {
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
             {loginError && <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> {loginError}</div>}
-            <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-emerald-500/40 focus:bg-zinc-950/80 transition-colors text-sm" placeholder="Login z gry" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-emerald-500/40 focus:bg-zinc-950/80 transition-colors text-sm" placeholder="Hasło dyspozytorskie" />
+            <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-gzm-yellow/40 focus:bg-zinc-950/80 transition-colors text-sm" placeholder="Login z gry" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-gzm-yellow/40 focus:bg-zinc-950/80 transition-colors text-sm" placeholder="Hasło dyspozytorskie" />
             <button type="submit" disabled={isLoading} className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl transition-colors text-sm mt-2 shadow-lg disabled:opacity-60">{isLoading ? 'Łączenie...' : 'Zaloguj się'}</button>
           </form>
         </div>
@@ -836,12 +836,12 @@ const handleAssignShift = async (e) => {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-inter flex justify-center p-4 sm:p-8">
+    <div className="min-h-screen bg-gzm-black text-zinc-100 font-inter flex justify-center p-4 sm:p-8">
       <div className="w-full max-w-4xl flex flex-col gap-6">
 
         <header className="flex items-center justify-between bg-zinc-900/40 border border-zinc-800/60 p-4 rounded-2xl backdrop-blur-sm">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-zinc-800 rounded-full flex items-center justify-center font-medium text-emerald-400 border border-zinc-700">{user.avatar}</div>
+            <div className="h-10 w-10 bg-zinc-800 rounded-full flex items-center justify-center font-medium text-gzm-yellow border border-zinc-700">{user.avatar}</div>
             <div>
               <p className="text-sm font-medium">{user.name}</p>
               <p className="text-xs text-zinc-500">{user.role === 'admin' ? 'Centrala Dyspozytorska' : 'Kierowca Liniowy'}</p>
@@ -855,8 +855,8 @@ const handleAssignShift = async (e) => {
                 <button onClick={() => { setActiveTab('fleet'); setShowChangePassword(false); fetchFleet(); fetchDrivers(); }} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'fleet' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Tabor"><Truck className="h-5 w-5" /></button>
                 <button onClick={() => { setActiveTab('schedules'); setShowChangePassword(false); }} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'schedules' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Rozkłady jazdy"><BookOpen className="h-5 w-5" /></button>
                 <button onClick={() => { setActiveTab('messages'); setShowChangePassword(false); setUnreadCount(0); }} className={`relative p-2.5 rounded-xl transition-colors ${activeTab === 'messages' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Komunikaty">
-                  {unreadCount > 0 ? <BellRing className="h-5 w-5 text-emerald-400" /> : <Bell className="h-5 w-5" />}
-                  {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-zinc-950 text-[10px] font-bold rounded-full flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+                  {unreadCount > 0 ? <BellRing className="h-5 w-5 text-gzm-yellow" /> : <Bell className="h-5 w-5" />}
+                  {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-gzm-yellow text-zinc-950 text-[10px] font-bold rounded-full flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>}
                 </button>
                 <button onClick={() => setShowChangePassword(v => !v)} className={`p-2.5 rounded-xl transition-colors ${showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Zmień hasło"><KeyRound className="h-5 w-5" /></button>
               </>
@@ -867,7 +867,7 @@ const handleAssignShift = async (e) => {
         </header>
 
         <main className="flex-1 space-y-6">
-          <div className="flex items-center gap-3 px-4 py-3 bg-red-500/10 border border-red-500/40 rounded-2xl text-red-400 text-sm font-medium">
+          <div className="flex items-center gap-3 px-4 py-3 bg-gzm-yellow/10 border border-gzm-yellow/40 rounded-2xl text-gzm-yellow text-sm font-medium">
   <span className="flex-shrink-0">⚠️</span>
   Od dnia 29.06.2026 r. do dnia 31.08.2026 r. obowiązują rozkłady wakacyjne.
 </div>
@@ -886,11 +886,11 @@ const handleAssignShift = async (e) => {
           <div><p className="text-xs text-zinc-500 mb-1">Stanowisko</p><p className="text-sm text-zinc-200">{myProfile.position || '—'}</p></div>
           <div>
             <p className="text-xs text-zinc-500 mb-1">Status</p>
-            <span className={`px-2 py-1 rounded-md text-xs font-medium border ${myProfile.employmentStatus === 'pracujacy' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>
+            <span className={`px-2 py-1 rounded-md text-xs font-medium border ${myProfile.employmentStatus === 'pracujacy' ? 'text-gzm-yellow bg-gzm-yellow/10 border-gzm-yellow/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>
               {myProfile.employmentStatus === 'pracujacy' ? 'Pracujący' : 'Zwolniony'}
             </span>
           </div>
-          <div><p className="text-xs text-zinc-500 mb-1">Punkty</p><p className="text-sm font-medium text-emerald-400">{myProfile.points ?? 0}</p></div>
+          <div><p className="text-xs text-zinc-500 mb-1">Punkty</p><p className="text-sm font-medium text-gzm-yellow">{myProfile.points ?? 0}</p></div>
           <div><p className="text-xs text-zinc-500 mb-1">Minusy</p><p className="text-sm font-medium text-red-400">{myProfile.minuses ?? 0}</p></div>
         </div>
         {myProfile.additionalInfo && (
@@ -909,7 +909,7 @@ const handleAssignShift = async (e) => {
                         <div><p className="text-sm text-zinc-500">Brygada</p><h3 className="text-xl font-medium text-zinc-100">{myShift.brigade}</h3></div>
                       </div>
                       <div className="grid grid-cols-2 gap-4 bg-zinc-950/50 p-4 rounded-2xl border border-zinc-800/50">
-                        <div><p className="text-xs text-zinc-500 mb-1">Pojazd</p><p className="text-sm font-medium text-emerald-400">{myShift.bus}</p></div>
+                        <div><p className="text-xs text-zinc-500 mb-1">Pojazd</p><p className="text-sm font-medium text-gzm-yellow">{myShift.bus}</p></div>
                         <div><p className="text-xs text-zinc-500 mb-1">Godziny</p><p className="text-sm font-medium">{myShift.startTime} - {myShift.endTime}</p></div>
                       </div>
                     </div>
@@ -937,7 +937,7 @@ const handleAssignShift = async (e) => {
                             <div className="h-10 w-10 bg-zinc-800 text-zinc-100 rounded-xl flex items-center justify-center font-bold text-sm">{s.line}</div>
                             <div><p className="text-sm font-medium text-zinc-200">Brygada {s.brigade}</p><p className="text-xs text-zinc-500">{s.startTime} – {s.endTime} | Wóz: {s.bus}</p></div>
                           </div>
-                          <span className={`px-2 py-1 rounded-md text-xs font-medium ${s.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-800 text-zinc-500'}`}>{s.status === 'completed' ? 'Zakończona' : 'Anulowana'}</span>
+                          <span className={`px-2 py-1 rounded-md text-xs font-medium ${s.status === 'completed' ? 'bg-gzm-yellow/10 text-gzm-yellow border border-gzm-yellow/20' : 'bg-zinc-800 text-zinc-500'}`}>{s.status === 'completed' ? 'Zakończona' : 'Anulowana'}</span>
                         </div>
                       ))}
                     </div>
@@ -952,13 +952,13 @@ const handleAssignShift = async (e) => {
               <h2 className="text-xl font-medium mb-4 text-zinc-200">Złożenie rozliczenia</h2>
               <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-10 text-center">
                 {isUploaded ? (
-                  <div className="space-y-4 py-8"><div className="mx-auto w-16 h-16 bg-emerald-400/10 text-emerald-400 rounded-full flex items-center justify-center mb-4"><CheckCircle className="w-8 h-8" /></div><h3 className="text-xl font-medium">Raport dostarczony</h3></div>
+                  <div className="space-y-4 py-8"><div className="mx-auto w-16 h-16 bg-gzm-yellow/10 text-gzm-yellow rounded-full flex items-center justify-center mb-4"><CheckCircle className="w-8 h-8" /></div><h3 className="text-xl font-medium">Raport dostarczony</h3></div>
                 ) : (
                   <div className="max-w-md mx-auto space-y-6">
                     <p className="text-sm text-zinc-400">Wyślij plik PDF z podsumowaniem służby.</p>
                     <div className="relative border-2 border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-950/50 rounded-2xl p-8 group cursor-pointer">
                       <input type="file" accept=".pdf" onChange={(e) => setDriverReportFile(e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                      <div className="flex flex-col items-center gap-3"><UploadCloud className="w-10 h-10 text-zinc-600 group-hover:text-emerald-400" /><p className="text-sm font-medium text-zinc-300">{driverReportFile ? driverReportFile.name : "Wybierz plik PDF"}</p></div>
+                      <div className="flex flex-col items-center gap-3"><UploadCloud className="w-10 h-10 text-zinc-600 group-hover:text-gzm-yellow" /><p className="text-sm font-medium text-zinc-300">{driverReportFile ? driverReportFile.name : "Wybierz plik PDF"}</p></div>
                     </div>
                     <button onClick={submitDriverReport} disabled={!driverReportFile} className="w-full py-3.5 bg-zinc-100 hover:bg-white text-zinc-900 disabled:bg-zinc-800 disabled:text-zinc-600 rounded-xl text-sm font-medium">Wyślij raport</button>
                   </div>
@@ -985,14 +985,14 @@ const handleAssignShift = async (e) => {
               {adminSubTab === 'crew' && (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 h-fit">
-      <h2 className="text-xl font-medium text-zinc-200 mb-4 flex items-center gap-2"><UserPlus className="w-5 h-5 text-emerald-400" /> Dodaj kierowcę</h2>
+      <h2 className="text-xl font-medium text-zinc-200 mb-4 flex items-center gap-2"><UserPlus className="w-5 h-5 text-gzm-yellow" /> Dodaj kierowcę</h2>
       {newDriverSuccess ? (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-sm text-center">Konto zostało pomyślnie utworzone!</div>
+        <div className="p-4 bg-gzm-yellow/10 border border-gzm-yellow/20 text-gzm-yellow rounded-xl text-sm text-center">Konto zostało pomyślnie utworzone!</div>
       ) : (
         <form onSubmit={handleAddDriver} className="space-y-4">
-          <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Nick / Imię w grze</label><input required type="text" placeholder="np. Kacper Nowak" value={newDriverName} onChange={(e) => setNewDriverName(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50" /></div>
-          <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Login do panelu</label><input required type="text" placeholder="np. kacper" value={newDriverLogin} onChange={(e) => setNewDriverLogin(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50" /></div>
-          <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Hasło</label><input required type="password" placeholder="np. vPKM123" value={newDriverPass} onChange={(e) => setNewDriverPass(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50" /></div>
+          <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Nick / Imię w grze</label><input required type="text" placeholder="np. Kacper Nowak" value={newDriverName} onChange={(e) => setNewDriverName(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/50" /></div>
+          <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Login do panelu</label><input required type="text" placeholder="np. kacper" value={newDriverLogin} onChange={(e) => setNewDriverLogin(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/50" /></div>
+          <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Hasło</label><input required type="password" placeholder="np. vPKM123" value={newDriverPass} onChange={(e) => setNewDriverPass(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/50" /></div>
           <button type="submit" className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm mt-2">Stwórz konto</button>
         </form>
       )}
@@ -1030,8 +1030,8 @@ const handleAssignShift = async (e) => {
                   <p className="text-xs text-zinc-500">Login: {d.login} {d.robloxNick && `· Roblox: ${d.robloxNick}`}</p>
                   <p className="text-xs text-zinc-500">{d.position || '—'}</p>
                   <div className="flex gap-2 mt-1">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${d.employmentStatus === 'pracujacy' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>{d.employmentStatus === 'pracujacy' ? 'Pracujący' : 'Zwolniony'}</span>
-                    <span className="text-[10px] text-emerald-400">+{d.points ?? 0}</span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${d.employmentStatus === 'pracujacy' ? 'text-gzm-yellow bg-gzm-yellow/10 border-gzm-yellow/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>{d.employmentStatus === 'pracujacy' ? 'Pracujący' : 'Zwolniony'}</span>
+                    <span className="text-[10px] text-gzm-yellow">+{d.points ?? 0}</span>
                     <span className="text-[10px] text-red-400">-{d.minuses ?? 0}</span>
                   </div>
                 </div>
@@ -1052,14 +1052,14 @@ const handleAssignShift = async (e) => {
                 <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8">
                   <h2 className="text-xl font-medium text-zinc-200 mb-6">Kreator dyspozycji</h2>
                   {assignSuccess ? (
-                    <div className="py-12 flex flex-col items-center text-center"><div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mb-4"><CheckCircle className="w-8 h-8" /></div><h3 className="text-lg font-medium text-white">Służba przypisana poprawnie!</h3></div>
+                    <div className="py-12 flex flex-col items-center text-center"><div className="w-16 h-16 bg-gzm-yellow/10 text-gzm-yellow rounded-full flex items-center justify-center mb-4"><CheckCircle className="w-8 h-8" /></div><h3 className="text-lg font-medium text-white">Służba przypisana poprawnie!</h3></div>
                   ) : (
                     <form onSubmit={handleAssignShift} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                           <div>
                             <label className="block text-xs font-medium text-zinc-500 mb-1.5">Wybierz Kierowcę</label>
-                            <select required value={assignDriverId} onChange={(e) => setAssignDriverId(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-emerald-500/50">
+                            <select required value={assignDriverId} onChange={(e) => setAssignDriverId(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/50">
                               <option value="">-- Kto dzisiaj jeździ? --</option>
                               {driversList.map(d => <option key={d.id} value={d.id}>{d.displayName} ({d.login})</option>)}
                             </select>
@@ -1149,9 +1149,9 @@ const handleAssignShift = async (e) => {
                             <div><p className="font-medium text-zinc-200">{report.driverName}</p><p className="text-xs text-zinc-500">Wysłano: {report.date}</p></div>
                           </div>
                           <div className="flex items-center gap-3 w-full lg:w-auto">
-                            <button onClick={() => downloadProtectedFile(`${API_URL}${report.pdfUrl}`)} className="flex items-center gap-2 px-4 py-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-zinc-300"><FileText className="w-4 h-4 text-emerald-400" /> Pobierz Raport PDF</button>
+                            <button onClick={() => downloadProtectedFile(`${API_URL}${report.pdfUrl}`)} className="flex items-center gap-2 px-4 py-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-zinc-300"><FileText className="w-4 h-4 text-gzm-yellow" /> Pobierz Raport PDF</button>
                             <div className="flex gap-2">
-                              <button onClick={() => handleReportAction(report.id, 'approve')} className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20"><CheckCircle className="w-5 h-5" /></button>
+                              <button onClick={() => handleReportAction(report.id, 'approve')} className="p-2.5 bg-gzm-yellow/10 text-gzm-yellow rounded-xl border border-gzm-yellow/20"><CheckCircle className="w-5 h-5" /></button>
                               <button onClick={() => handleReportAction(report.id, 'reject')} className="p-2.5 bg-red-500/10 text-red-400 rounded-xl border border-red-500/20"><XCircle className="w-5 h-5" /></button>
                             </div>
                           </div>
