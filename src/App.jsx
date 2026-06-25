@@ -660,10 +660,10 @@ export default function App() {
   const [assignDriverId, setAssignDriverId] = useState('');
   const [assignLine, setAssignLine] = useState('');
   const [assignBrigade, setAssignBrigade] = useState('');
-  const [assignBus, setAssignBus] = useState('');
+  const [assignScheduleFile, setAssignScheduleFile] = useState('');
   const [assignStart, setAssignStart] = useState('');
   const [assignEnd, setAssignEnd] = useState('');
-  const [assignPdf, setAssignPdf] = useState(null);
+  const [assignBusId, setAssignBusId] = useState('');
   const [assignSuccess, setAssignSuccess] = useState(false);
   const [pendingReports, setPendingReports] = useState([]);
   const [driversList, setDriversList] = useState([]);
@@ -693,10 +693,9 @@ useEffect(() => {
     fetchMyProfile();
   }
   if (user.role === 'admin') {
-    fetchDrivers(); fetchActiveShifts();
+    fetchDrivers(); fetchActiveShifts(); fetchFleet();
     if (adminSubTab === 'reports') fetchReports();
-    if (adminSubTab === 'fleet') fetchFleet();
-  }
+}
   if (user.role === 'driver' && activeTab === 'fleet') { fetchFleet(); fetchDrivers(); }
 }, [isLoggedIn, user, adminSubTab, activeTab]);
 
@@ -785,19 +784,36 @@ const handleSaveDriver = async (e) => {
     } catch { setChangePasswordMsg('❌ Błąd połączenia z serwerem'); }
   };
 
-  const handleAssignShift = async (e) => {
+const handleAssignShift = async (e) => {
     e.preventDefault();
-    if (!assignPdf || !assignDriverId) { alert("Wybierz kierowcę i załącz PDF!"); return; }
+    if (!assignDriverId || !assignLine || !assignBusId) { alert("Wybierz kierowcę, linię i pojazd!"); return; }
     const selectedDriver = driversList.find(d => d.id === assignDriverId);
-    const formData = new FormData();
-    formData.append('pdf_file', assignPdf); formData.append('driverId', selectedDriver.id); formData.append('driverName', selectedDriver.displayName);
-    formData.append('line', assignLine); formData.append('brigade', assignBrigade); formData.append('bus', assignBus);
-    formData.append('startTime', assignStart); formData.append('endTime', assignEnd);
+    const selectedVehicle = fleet.find(v => v.id === assignBusId);
+    const busLabel = selectedVehicle ? `${selectedVehicle.brand || ''} ${selectedVehicle.model || ''} (#${selectedVehicle.busNumber})`.trim() : '';
     try {
-      const response = await authFetch(`${API_URL}/api/shifts`, { method: 'POST', body: formData });
-      if (response.ok) { setAssignSuccess(true); fetchActiveShifts(); setTimeout(() => { setAssignSuccess(false); setAssignDriverId(''); setAssignLine(''); setAssignBrigade(''); setAssignBus(''); setAssignStart(''); setAssignEnd(''); setAssignPdf(null); }, 3000); }
+      const response = await authFetch(`${API_URL}/api/shifts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          driverId: selectedDriver.id,
+          driverName: selectedDriver.displayName,
+          line: assignLine,
+          brigade: assignBrigade,
+          bus: busLabel,
+          startTime: assignStart,
+          endTime: assignEnd,
+          scheduleFile: assignScheduleFile
+        })
+      });
+      if (response.ok) {
+        setAssignSuccess(true); fetchActiveShifts();
+        setTimeout(() => {
+          setAssignSuccess(false); setAssignDriverId(''); setAssignLine(''); setAssignBrigade('');
+          setAssignBusId(''); setAssignStart(''); setAssignEnd(''); setAssignScheduleFile('');
+        }, 3000);
+      } else { alert('Błąd podczas wystawiania służby.'); }
     } catch (err) { console.error(err); }
-  };
+};
 
   const handleReportAction = async (id, action) => {
     try { const response = await authFetch(`${API_URL}/api/reports/${id}/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }) }); if (response.ok) fetchReports(); } catch (err) { console.error(err); }
@@ -909,7 +925,7 @@ const handleSaveDriver = async (e) => {
                       <div className="flex flex-col justify-center min-w-[220px]">
                         <div className="p-5 bg-zinc-950/50 rounded-2xl border border-zinc-800/80 space-y-4">
                           <div className="flex items-center gap-3"><FileText className="w-8 h-8 text-zinc-400" /><div><p className="text-xs text-zinc-500">Rozkład jazdy</p><p className="text-xs font-medium text-zinc-400">Pobierz załącznik</p></div></div>
-                          <button onClick={() => downloadProtectedFile(`${API_URL}${myShift.pdfUrl}`)} className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-zinc-100 hover:bg-white text-zinc-900 rounded-xl text-sm font-medium transition-colors"><Download className="w-4 h-4" /> Otwórz PDF</button>
+                          <a href={myShift.pdfUrl} target="_blank" rel="noreferrer" className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-zinc-100 hover:bg-white text-zinc-900 rounded-xl text-sm font-medium transition-colors"><Download className="w-4 h-4" /> Otwórz PDF</a>
                         </div>
                       </div>
                     )}
@@ -1057,10 +1073,25 @@ const handleSaveDriver = async (e) => {
                             </select>
                             {driversList.length === 0 && <p className="text-[10px] text-red-400 mt-1">Najpierw musisz dodać kierowcę w zakładce "Kierowcy".</p>}
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Linia</label><input required type="text" placeholder="75" value={assignLine} onChange={(e) => setAssignLine(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none" /></div>
-                            <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Brygada</label><input required type="text" placeholder="02" value={assignBrigade} onChange={(e) => setAssignBrigade(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none" /></div>
-                          </div>
+                          <div>
+  <label className="block text-xs font-medium text-zinc-500 mb-1.5">Linia (z rozkładu)</label>
+  <select required value={assignLine} onChange={(e) => {
+    const selected = WEEKEND_LINES.find(l => l.label === e.target.value);
+    setAssignLine(e.target.value);
+    setAssignScheduleFile(selected ? selected.file : '');
+  }} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
+    <option value="">-- Wybierz linię --</option>
+    {WEEKEND_LINES.map(l => <option key={l.file} value={l.label}>{l.label}</option>)}
+  </select>
+</div>
+<div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Brygada</label><input required type="text" placeholder="02" value={assignBrigade} onChange={(e) => setAssignBrigade(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none" /></div>
+<div>
+  <label className="block text-xs font-medium text-zinc-500 mb-1.5">Przydziel Wóz</label>
+  <select required value={assignBusId} onChange={(e) => setAssignBusId(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
+    <option value="">-- Wybierz pojazd --</option>
+    {fleet.map(v => <option key={v.id} value={v.id}>{v.brand} {v.model} (#{v.busNumber})</option>)}
+  </select>
+</div>
                           <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Przydziel Wóz</label><input required type="text" placeholder="Solaris U18 (#421)" value={assignBus} onChange={(e) => setAssignBus(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none" /></div>
                         </div>
                         <div className="space-y-4 flex flex-col">
@@ -1068,13 +1099,7 @@ const handleSaveDriver = async (e) => {
                             <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Rozpoczęcie</label><input required type="time" value={assignStart} onChange={(e) => setAssignStart(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-400 text-sm focus:outline-none" /></div>
                             <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Zakończenie</label><input required type="time" value={assignEnd} onChange={(e) => setAssignEnd(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-400 text-sm focus:outline-none" /></div>
                           </div>
-                          <div className="flex-1 mt-1">
-                            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Rozkład Jazdy (PDF)</label>
-                            <div className="relative h-[115px] border-2 border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-950/50 rounded-xl flex items-center justify-center group cursor-pointer">
-                              <input required type="file" accept=".pdf" onChange={(e) => setAssignPdf(e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                              <div className="flex flex-col items-center gap-2 text-center px-4"><FileUp className="w-6 h-6 text-zinc-600 group-hover:text-emerald-400" /><span className="text-xs font-medium text-zinc-400 truncate max-w-full">{assignPdf ? assignPdf.name : "Wgraj rozkład .pdf"}</span></div>
-                            </div>
-                          </div>
+                    
                         </div>
                       </div>
                       <div className="pt-4 border-t border-zinc-800/80"><button type="submit" disabled={driversList.length === 0} className="px-8 py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm flex items-center gap-2 disabled:bg-zinc-800 disabled:text-zinc-600"><Plus className="w-4 h-4" /> Wyślij dyspozycję</button></div>
