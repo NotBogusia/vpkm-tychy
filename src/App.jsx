@@ -814,11 +814,11 @@ const handleAssignShift = async (e) => {
   if (!isLoggedIn) {
     return (
       <div className="relative min-h-screen bg-gzm-black flex items-center justify-center p-4 font-inter text-zinc-100 overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url('/bg-login.jpg')` }} />
+        <div className="absolute inset-0 bg-cover bg-center scale-105 animate-in fade-in duration-700" style={{ backgroundImage: `url('/bg-login.jpg')` }} />
         <div className="absolute inset-0 bg-zinc-950/20 backdrop-blur-sm" />
-        <div className="relative z-10 w-full max-w-md bg-zinc-900/60 p-8 sm:p-10 rounded-3xl border border-zinc-800/80 backdrop-blur-md shadow-2xl">
+        <div className="relative z-10 w-full max-w-md bg-zinc-900/60 p-8 sm:p-10 rounded-3xl border border-zinc-800/80 backdrop-blur-md shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="text-center mb-8">
-            <div className="inline-flex p-3 bg-zinc-950/60 rounded-2xl mb-4 border border-zinc-800/50">
+            <div className="inline-flex p-3 bg-zinc-950/60 rounded-2xl mb-4 border border-zinc-800/50 transition-transform duration-300 hover:scale-105">
   <img src="/logo.png" alt="logo" className="h-6 w-6 object-contain" />
 </div>
             <h1 className="text-2xl font-semibold tracking-tight">vPKM Tychy</h1>
@@ -826,9 +826,9 @@ const handleAssignShift = async (e) => {
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
             {loginError && <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> {loginError}</div>}
-            <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-gzm-yellow/40 focus:bg-zinc-950/80 transition-colors text-sm" placeholder="Login z gry" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-gzm-yellow/40 focus:bg-zinc-950/80 transition-colors text-sm" placeholder="Hasło dyspozytorskie" />
-            <button type="submit" disabled={isLoading} className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl transition-colors text-sm mt-2 shadow-lg disabled:opacity-60">{isLoading ? 'Łączenie...' : 'Zaloguj się'}</button>
+            <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-gzm-yellow/40 focus:bg-zinc-950/80 transition-all duration-200 text-sm" placeholder="Login z gry" />
+<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-gzm-yellow/40 focus:bg-zinc-950/80 transition-all duration-200 text-sm" placeholder="Hasło dyspozytorskie" />
+            <button type="submit" disabled={isLoading} className="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl transition-all duration-200 active:scale-[0.98] hover:shadow-xl hover:shadow-gzm-yellow/5 text-sm mt-2 shadow-lg disabled:opacity-60">{isLoading ? 'Łączenie...' : 'Zaloguj się'}</button>
           </form>
         </div>
       </div>
@@ -841,7 +841,7 @@ const handleAssignShift = async (e) => {
 
         <header className="flex items-center justify-between bg-zinc-900/40 border border-zinc-800/60 p-4 rounded-2xl backdrop-blur-sm">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-zinc-800 rounded-full flex items-center justify-center font-medium text-gzm-yellow border border-zinc-700">{user.avatar}</div>
+            <div className="h-10 w-10 bg-zinc-800 rounded-full flex items-center justify-center font-medium text-gzm-yellow border border-zinc-700 transition-transform duration-300 hover:scale-105">{user.avatar}</div>
             <div>
               <p className="text-sm font-medium">{user.name}</p>
               <p className="text-xs text-zinc-500">{user.role === 'admin' ? 'Centrala Dyspozytorska' : 'Kierowca Liniowy'}</p>
@@ -850,19 +850,19 @@ const handleAssignShift = async (e) => {
           <div className="flex gap-2 items-center">
             {user.role === 'driver' && (
               <>
-                <button onClick={() => { setActiveTab('dashboard'); setShowChangePassword(false); }} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'dashboard' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Dyspozycja"><Bus className="h-5 w-5" /></button>
-                <button onClick={() => { setActiveTab('report'); setShowChangePassword(false); }} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'report' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Złóż raport"><FileText className="h-5 w-5" /></button>
-                <button onClick={() => { setActiveTab('fleet'); setShowChangePassword(false); fetchFleet(); fetchDrivers(); }} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'fleet' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Tabor"><Truck className="h-5 w-5" /></button>
-                <button onClick={() => { setActiveTab('schedules'); setShowChangePassword(false); }} className={`p-2.5 rounded-xl transition-colors ${activeTab === 'schedules' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Rozkłady jazdy"><BookOpen className="h-5 w-5" /></button>
-                <button onClick={() => { setActiveTab('messages'); setShowChangePassword(false); setUnreadCount(0); }} className={`relative p-2.5 rounded-xl transition-colors ${activeTab === 'messages' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Komunikaty">
-                  {unreadCount > 0 ? <BellRing className="h-5 w-5 text-gzm-yellow" /> : <Bell className="h-5 w-5" />}
-                  {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-gzm-yellow text-zinc-950 text-[10px] font-bold rounded-full flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>}
-                </button>
-                <button onClick={() => setShowChangePassword(v => !v)} className={`p-2.5 rounded-xl transition-colors ${showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Zmień hasło"><KeyRound className="h-5 w-5" /></button>
+                <button onClick={() => { setActiveTab('dashboard'); setShowChangePassword(false); }} className={`p-2.5 rounded-xl transition-all duration-200 active:scale-90 ${activeTab === 'dashboard' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40'}`} title="Dyspozycja"><Bus className="h-5 w-5" /></button>
+                <button onClick={() => { setActiveTab('report'); setShowChangePassword(false); }} className={`p-2.5 rounded-xl transition-all duration-200 active:scale-90 ${activeTab === 'report' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Złóż raport"><FileText className="h-5 w-5" /></button>
+                <button onClick={() => { setActiveTab('fleet'); setShowChangePassword(false); fetchFleet(); fetchDrivers(); }} className={`p-2.5 rounded-xl transition-all duration-200 active:scale-90 ${activeTab === 'fleet' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Tabor"><Truck className="h-5 w-5" /></button>
+                <button onClick={() => { setActiveTab('schedules'); setShowChangePassword(false); }} className={`p-2.5 rounded-xl transition-all duration-200 active:scale-90 ${activeTab === 'schedules' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Rozkłady jazdy"><BookOpen className="h-5 w-5" /></button>
+               <button onClick={() => { setActiveTab('messages'); setShowChangePassword(false); setUnreadCount(0); }} className={`relative p-2.5 rounded-xl transition-all duration-200 active:scale-90 ${activeTab === 'messages' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40'}`} title="Komunikaty">
+  {unreadCount > 0 ? <BellRing className="h-5 w-5 text-gzm-yellow animate-ring" /> : <Bell className="h-5 w-5" />}
+  {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-gzm-yellow text-zinc-950 text-[10px] font-bold rounded-full flex items-center justify-center animate-pop-in">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+</button>
+                <button onClick={() => setShowChangePassword(v => !v)} className={`p-2.5 rounded-xl transition-all duration-200 active:scale-90 ${showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Zmień hasło"><KeyRound className="h-5 w-5" /></button>
               </>
             )}
             <div className="w-px h-6 bg-zinc-800 my-auto mx-1"></div>
-            <button onClick={handleLogout} className="p-2.5 text-zinc-500 hover:text-red-400 transition-colors rounded-xl" title="Wyloguj"><LogOut className="h-5 w-5" /></button>
+            <button onClick={handleLogout} className="p-2.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 active:scale-90 rounded-xl" title="Wyloguj"><LogOut className="h-5 w-5" /></button>
           </div>
         </header>
 
