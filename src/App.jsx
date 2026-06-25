@@ -65,12 +65,12 @@ const SchedulesView = () => {
     <div className="animate-in fade-in duration-500 space-y-4">
       <h2 className="text-xl font-medium text-zinc-200 flex items-center gap-2"><BookOpen className="w-5 h-5 text-emerald-400" /> Rozkłady jazdy</h2>
       <div className="flex gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-fit">
-        <button onClick={() => setSubTab('weekend')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${subTab === 'weekend' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Calendar className="w-4 h-4" /> Weekendowe</button>
+        <button onClick={() => setSubTab('weekend')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${subTab === 'weekend' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Calendar className="w-4 h-4" /> Sobotnie i niedzielne</button>
         <button onClick={() => setSubTab('weekday')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${subTab === 'weekday' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Calendar className="w-4 h-4" /> Dni robocze</button>
       </div>
       <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
         <div className="px-6 py-4 border-b border-zinc-800/80 flex items-center justify-between">
-          <h3 className="text-sm font-medium text-zinc-300">{subTab === 'weekend' ? 'Rozkłady weekendowe' : 'Rozkłady — dni robocze'}</h3>
+          <h3 className="text-sm font-medium text-zinc-300">{subTab === 'weekend' ? 'Rozkłady sobotnie i niedzielne' : 'Rozkłady — dni robocze'}</h3>
           <span className="text-xs text-zinc-600">{currentLines.length} linii</span>
         </div>
         {currentLines.length === 0 ? (
@@ -658,8 +658,11 @@ export default function App() {
   const [newPassword, setNewPassword] = useState('');
   const [changePasswordMsg, setChangePasswordMsg] = useState('');
   const [assignDriverId, setAssignDriverId] = useState('');
+  const [assignCategory, setAssignCategory] = useState('weekend'); // 'weekend' albo 'weekday'
   const [assignLine, setAssignLine] = useState('');
-  const [assignBrigade, setAssignBrigade] = useState('');
+  const [assignScheduleFile, setAssignScheduleFile] = useState('');
+  const [assignNote, setAssignNote] = useState(''); // opcjonalna notatka, zamiast brygady
+  const [assignBusId, setAssignBusId] = useState('');
   const [assignScheduleFile, setAssignScheduleFile] = useState('');
   const [assignStart, setAssignStart] = useState('');
   const [assignEnd, setAssignEnd] = useState('');
@@ -798,7 +801,7 @@ const handleAssignShift = async (e) => {
           driverId: selectedDriver.id,
           driverName: selectedDriver.displayName,
           line: assignLine,
-          brigade: assignBrigade,
+          brigade: assignNote, // notatka, opcjonalna, zapisywana w tym samym polu co dawniej brygada
           bus: busLabel,
           startTime: assignStart,
           endTime: assignEnd,
@@ -808,8 +811,8 @@ const handleAssignShift = async (e) => {
       if (response.ok) {
         setAssignSuccess(true); fetchActiveShifts();
         setTimeout(() => {
-          setAssignSuccess(false); setAssignDriverId(''); setAssignLine(''); setAssignBrigade('');
-          setAssignBusId(''); setAssignStart(''); setAssignEnd(''); setAssignScheduleFile('');
+          setAssignSuccess(false); setAssignDriverId(''); setAssignLine(''); setAssignNote('');
+          setAssignBusId(''); setAssignStart(''); setAssignEnd(''); setAssignScheduleFile(''); setAssignCategory('weekend');
         }, 3000);
       } else { alert('Błąd podczas wystawiania służby.'); }
     } catch (err) { console.error(err); }
@@ -1074,23 +1077,37 @@ const handleAssignShift = async (e) => {
                             {driversList.length === 0 && <p className="text-[10px] text-red-400 mt-1">Najpierw musisz dodać kierowcę w zakładce "Kierowcy".</p>}
                           </div>
                           <div>
+                            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Kategoria rozkładu</label>
+  <select value={assignCategory} onChange={(e) => { setAssignCategory(e.target.value); setAssignLine(''); setAssignScheduleFile(''); }} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
+    <option value="weekend">Sobotnie i niedzielne</option>
+    <option value="weekday">Dni robocze</option>
+  </select>
+</div>
+<div>
   <label className="block text-xs font-medium text-zinc-500 mb-1.5">Linia (z rozkładu)</label>
   <select required value={assignLine} onChange={(e) => {
-    const selected = WEEKEND_LINES.find(l => l.label === e.target.value);
+    const lines = assignCategory === 'weekend' ? WEEKEND_LINES : WEEKDAY_LINES;
+    const selected = lines.find(l => l.label === e.target.value);
     setAssignLine(e.target.value);
     setAssignScheduleFile(selected ? selected.file : '');
   }} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
     <option value="">-- Wybierz linię --</option>
-    {WEEKEND_LINES.map(l => <option key={l.file} value={l.label}>{l.label}</option>)}
+    {(assignCategory === 'weekend' ? WEEKEND_LINES : WEEKDAY_LINES).map(l => <option key={l.file} value={l.label}>{l.label}</option>)}
   </select>
+  {(assignCategory === 'weekday' ? WEEKDAY_LINES.length === 0 : false) && (
+    <p className="text-[10px] text-amber-400/80 mt-1">Brak rozkładów dla dni roboczych — zostaną dodane wkrótce.</p>
+  )}
 </div>
-<div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Brygada</label><input required type="text" placeholder="02" value={assignBrigade} onChange={(e) => setAssignBrigade(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none" /></div>
 <div>
   <label className="block text-xs font-medium text-zinc-500 mb-1.5">Przydziel Wóz</label>
   <select required value={assignBusId} onChange={(e) => setAssignBusId(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
     <option value="">-- Wybierz pojazd --</option>
     {fleet.map(v => <option key={v.id} value={v.id}>{v.brand} {v.model} (#{v.busNumber})</option>)}
   </select>
+</div>
+<div>
+  <label className="block text-xs font-medium text-zinc-500 mb-1.5">Notatka (opcjonalnie)</label>
+  <input type="text" placeholder="np. uwagi dla kierowcy" value={assignNote} onChange={(e) => setAssignNote(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none" />
 </div>
 
                         </div>
