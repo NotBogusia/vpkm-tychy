@@ -649,6 +649,7 @@ export default function App() {
   const [assignDriverId, setAssignDriverId] = useState('');
   const [assignCategory, setAssignCategory] = useState('weekday'); // 'weekend' albo 'weekday'
   const [assignLine, setAssignLine] = useState('');
+  const [assignShift, setAssignShift] = useState('');
   const [assignScheduleFile, setAssignScheduleFile] = useState('');
   const [assignNote, setAssignNote] = useState(''); // opcjonalna notatka, zamiast brygady
   const [assignStart, setAssignStart] = useState('');
@@ -785,21 +786,22 @@ const handleAssignShift = async (e) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          driverId: selectedDriver.id,
-          driverName: selectedDriver.displayName,
-          line: assignLine,
-          brigade: assignNote, // notatka, opcjonalna, zapisywana w tym samym polu co dawniej brygada
-          bus: busLabel,
-          startTime: assignStart,
-          endTime: assignEnd,
-          scheduleFile: assignScheduleFile
-        })
+  driverId: selectedDriver.id,
+  driverName: selectedDriver.displayName,
+  line: assignLine,
+  brigade: assignNote,
+  shift: assignShift,
+  bus: busLabel,
+  startTime: assignStart,
+  endTime: assignEnd,
+  scheduleFile: assignScheduleFile
+})
       });
       if (response.ok) {
         setAssignSuccess(true); fetchActiveShifts();
         setTimeout(() => {
           setAssignSuccess(false); setAssignDriverId(''); setAssignLine(''); setAssignNote('');
-          setAssignBusId(''); setAssignStart(''); setAssignEnd(''); setAssignScheduleFile(''); setAssignCategory('weekend');
+          setAssignBusId(''); setAssignStart(''); setAssignEnd(''); setAssignScheduleFile(''); setAssignCategory('weekend'); setAssignShift('');
         }, 3000);
       } else { alert('Błąd podczas wystawiania służby.'); }
     } catch (err) { console.error(err); }
@@ -1091,6 +1093,15 @@ const handleAssignShift = async (e) => {
   <select required value={assignBusId} onChange={(e) => setAssignBusId(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
     <option value="">-- Wybierz pojazd --</option>
     {fleet.map(v => <option key={v.id} value={v.id}>{v.brand} {v.model} (#{v.busNumber})</option>)}
+  </select>
+</div>
+<div>
+  <label className="block text-xs font-medium text-zinc-500 mb-1.5">Zmiana</label>
+  <select value={assignShift} onChange={(e) => setAssignShift(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
+    <option value="">-- Wybierz zmianę --</option>
+    <option value="A">Zmiana A</option>
+    <option value="B">Zmiana B</option>
+    <option value="A+B">Zmiana A+B</option>
   </select>
 </div>
 <div>
