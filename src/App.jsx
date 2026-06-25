@@ -813,7 +813,7 @@ const handleAssignShift = async (e) => {
 
   if (!isLoggedIn) {
     return (
-      <div className="relative min-h-screen bg-zinc-950 flex items-center justify-center p-4 font-sans text-zinc-100 overflow-hidden">
+      <div className="relative min-h-screen bg-zinc-950 flex items-center justify-center p-4 font-inter text-zinc-100 overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url('/bg-login.jpg')` }} />
         <div className="absolute inset-0 bg-zinc-950/20 backdrop-blur-sm" />
         <div className="relative z-10 w-full max-w-md bg-zinc-900/60 p-8 sm:p-10 rounded-3xl border border-zinc-800/80 backdrop-blur-md shadow-2xl">
@@ -836,7 +836,7 @@ const handleAssignShift = async (e) => {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex justify-center p-4 sm:p-8">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-inter flex justify-center p-4 sm:p-8">
       <div className="w-full max-w-4xl flex flex-col gap-6">
 
         <header className="flex items-center justify-between bg-zinc-900/40 border border-zinc-800/60 p-4 rounded-2xl backdrop-blur-sm">
