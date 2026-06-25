@@ -30,24 +30,12 @@ const downloadProtectedFile = async (url) => {
 // ---------------------------------------------------------
 // ROZKŁADY
 // ---------------------------------------------------------
-const WEEKEND_LINES = [
-  { label: '2/1 + 254/1', file: 'weekend_2_1.pdf' },
-  { label: '2/3 + 254/3', file: 'weekend_2_3.pdf' },
-  { label: '131/1', file: 'weekend_131_1.pdf' },
-  { label: '137/1', file: 'weekend_137_1.pdf' },
-  { label: '254/2 + 2/2', file: 'weekend_254_2.pdf' },
-  { label: '272/1 + 271/1', file: 'weekend_272_1.pdf' },
-  { label: '273/1', file: 'weekend_273_1.pdf' },
-  { label: '273/2', file: 'weekend_273_2.pdf' },
-  { label: '520/1', file: 'weekend_520_1.pdf' },
-  { label: '531/1', file: 'weekend_531_1.pdf' },
-  { label: '531/2', file: 'weekend_531_2.pdf' },
-  { label: '565/1', file: 'weekend_565_1.pdf' },
-];
 const WEEKDAY_LINES = [];
+const SATURDAY_LINES = [];
+const SUNDAY_LINES = [];
 
 const SchedulesView = () => {
-  const [subTab, setSubTab] = useState('weekend');
+  const [subTab, setSubTab] = useState('weekday');
   const openPdf = (filename) => window.open(`/${filename}`, '_blank', 'noopener,noreferrer');
   const LineRow = ({ label, file }) => (
     <div className="flex items-center justify-between px-6 py-4 hover:bg-zinc-800/20 transition-colors">
@@ -60,17 +48,18 @@ const SchedulesView = () => {
       </button>
     </div>
   );
-  const currentLines = subTab === 'weekend' ? WEEKEND_LINES : WEEKDAY_LINES;
+  const currentLines = subTab === 'weekday' ? WEEKDAY_LINES : subTab === 'saturday' ? SATURDAY_LINES : SUNDAY_LINES;
   return (
     <div className="animate-in fade-in duration-500 space-y-4">
       <h2 className="text-xl font-medium text-zinc-200 flex items-center gap-2"><BookOpen className="w-5 h-5 text-emerald-400" /> Rozkłady jazdy</h2>
       <div className="flex gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-fit">
-        <button onClick={() => setSubTab('weekend')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${subTab === 'weekend' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Calendar className="w-4 h-4" /> Sobotnie i niedzielne</button>
         <button onClick={() => setSubTab('weekday')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${subTab === 'weekday' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Calendar className="w-4 h-4" /> Dni robocze</button>
+        <button onClick={() => setSubTab('saturday')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${subTab === 'saturday' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Calendar className="w-4 h-4" /> Sobotnie</button>
+        <button onClick={() => setSubTab('sunday')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${subTab === 'sunday' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Calendar className="w-4 h-4" /> Niedzielne</button>
       </div>
       <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
         <div className="px-6 py-4 border-b border-zinc-800/80 flex items-center justify-between">
-          <h3 className="text-sm font-medium text-zinc-300">{subTab === 'weekend' ? 'Rozkłady sobotnie i niedzielne' : 'Rozkłady — dni robocze'}</h3>
+          <h3 className="text-sm font-medium text-zinc-300">{subTab === 'weekday' ? 'Rozkłady — dni robocze' : subTab === 'saturday' ? 'Rozkłady sobotnie' : 'Rozkłady niedzielne'}</h3>
           <span className="text-xs text-zinc-600">{currentLines.length} linii</span>
         </div>
         {currentLines.length === 0 ? (
@@ -658,7 +647,7 @@ export default function App() {
   const [newPassword, setNewPassword] = useState('');
   const [changePasswordMsg, setChangePasswordMsg] = useState('');
   const [assignDriverId, setAssignDriverId] = useState('');
-  const [assignCategory, setAssignCategory] = useState('weekend'); // 'weekend' albo 'weekday'
+  const [assignCategory, setAssignCategory] = useState('weekday'); // 'weekend' albo 'weekday'
   const [assignLine, setAssignLine] = useState('');
   const [assignScheduleFile, setAssignScheduleFile] = useState('');
   const [assignNote, setAssignNote] = useState(''); // opcjonalna notatka, zamiast brygady
@@ -1077,20 +1066,21 @@ const handleAssignShift = async (e) => {
                           <div>
                             <label className="block text-xs font-medium text-zinc-500 mb-1.5">Kategoria rozkładu</label>
   <select value={assignCategory} onChange={(e) => { setAssignCategory(e.target.value); setAssignLine(''); setAssignScheduleFile(''); }} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
-    <option value="weekend">Sobotnie i niedzielne</option>
-    <option value="weekday">Dni robocze</option>
-  </select>
+  <option value="weekday">Dni robocze</option>
+  <option value="saturday">Sobotnie</option>
+  <option value="sunday">Niedzielne</option>
+</select>
 </div>
 <div>
   <label className="block text-xs font-medium text-zinc-500 mb-1.5">Linia (z rozkładu)</label>
   <select required value={assignLine} onChange={(e) => {
-    const lines = assignCategory === 'weekend' ? WEEKEND_LINES : WEEKDAY_LINES;
+    const lines = assignCategory === 'weekday' ? WEEKDAY_LINES : assignCategory === 'saturday' ? SATURDAY_LINES : SUNDAY_LINES;
     const selected = lines.find(l => l.label === e.target.value);
     setAssignLine(e.target.value);
     setAssignScheduleFile(selected ? selected.file : '');
   }} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
     <option value="">-- Wybierz linię --</option>
-    {(assignCategory === 'weekend' ? WEEKEND_LINES : WEEKDAY_LINES).map(l => <option key={l.file} value={l.label}>{l.label}</option>)}
+    {(assignCategory === 'weekday' ? WEEKDAY_LINES : assignCategory === 'saturday' ? SATURDAY_LINES : SUNDAY_LINES).map(l => <option key={l.file} value={l.label}>{l.label}</option>)}
   </select>
   {(assignCategory === 'weekday' ? WEEKDAY_LINES.length === 0 : false) && (
     <p className="text-[10px] text-amber-400/80 mt-1">Brak rozkładów dla dni roboczych — zostaną dodane wkrótce.</p>
