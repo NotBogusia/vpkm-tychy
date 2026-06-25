@@ -1092,7 +1092,7 @@ const handleAssignShift = async (e) => {
     {fleet.map(v => <option key={v.id} value={v.id}>{v.brand} {v.model} (#{v.busNumber})</option>)}
   </select>
 </div>
-                          <div><label className="block text-xs font-medium text-zinc-500 mb-1.5">Przydziel Wóz</label><input required type="text" placeholder="Solaris U18 (#421)" value={assignBus} onChange={(e) => setAssignBus(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none" /></div>
+
                         </div>
                         <div className="space-y-4 flex flex-col">
                           <div className="grid grid-cols-2 gap-4">
