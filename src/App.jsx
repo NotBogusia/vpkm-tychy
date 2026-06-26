@@ -835,6 +835,18 @@ if (user.role === 'admin') {
 
   const handleAddDriver = async (e) => {
     e.preventDefault();
+    if (newDriverLogin.length < 3) {
+    alert('Login musi mieć minimum 3 znaki');
+    return;
+  }
+  if (newDriverPass.length < 6) {
+    alert('Hasło musi mieć minimum 6 znaków');
+    return;
+  }
+  if (newDriverName.length < 2) {
+    alert('Nazwa musi mieć minimum 2 znaki');
+    return;
+  }
     try {
       const res = await authFetch(`${API_URL}/api/drivers`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: newDriverLogin, password: newDriverPass, displayName: newDriverName }) });
       const data = await res.json();
@@ -870,6 +882,14 @@ const handleSaveDriver = async (e) => {
 
   const handleChangePassword = async (e) => {
     e.preventDefault(); setChangePasswordMsg('');
+    if (newPassword.length < 6) {
+    setChangePasswordMsg('❌ Nowe hasło musi mieć minimum 6 znaków');
+    return;
+  }
+  if (newPassword === currentPassword) {
+    setChangePasswordMsg('❌ Nowe hasło musi być inne niż obecne');
+    return;
+  }
     try {
       const res = await authFetch(`${API_URL}/api/change-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword, newPassword }) });
       const data = await res.json();
@@ -881,6 +901,14 @@ const handleSaveDriver = async (e) => {
 const handleAssignShift = async (e) => {
     e.preventDefault();
     if (!assignDriverId || !assignLine || !assignBusId || !assignBrigade) { alert("Wypełnij wszystkie wymagane pola!"); return; }
+    if (assignLine.length > 10) {
+    alert('Numer linii jest za długi');
+    return;
+  }
+  if (assignBrigade.length > 10) {
+    alert('Numer brygady jest za długi');
+    return;
+  }
     const selectedDriver = driversList.find(d => d.id === assignDriverId);
     const selectedVehicle = fleet.find(v => v.id === assignBusId);
     const selectedSchedule = allSchedules.find(s => String(s.id) === String(assignScheduleId));
