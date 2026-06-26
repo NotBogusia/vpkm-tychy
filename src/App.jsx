@@ -222,10 +222,17 @@ const FleetForm = ({ values, onChange, driversList, onSubmit, onCancel, submitLa
       </div>
 
       {/* Wiersz 2 — marka i model */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div><label className={labelCls}>Marka *</label><input required type="text" placeholder="np. Solaris" {...field('brand')} className={inputCls} /></div>
-        <div><label className={labelCls}>Typ / Model *</label><input required type="text" placeholder="np. Urbino 18" {...field('model')} className={inputCls} /></div>
-      </div>
+      {/* Wiersz 2 — marka i model w jednym polu */}
+<div>
+  <label className={labelCls}>Marka i typ *</label>
+  <input
+    required
+    type="text"
+    placeholder="np. Solaris Urbino 18"
+    {...field('brand')}
+    className={inputCls}
+  />
+</div>
 
       {/* Wiersz 3 — klasyfikacja (bez typ taboru) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
