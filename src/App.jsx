@@ -736,6 +736,7 @@ export default function App() {
   const [assignLine, setAssignLine] = useState('');
   const [assignBrigade, setAssignBrigade] = useState('');
   const [assignNote, setAssignNote] = useState('');
+  const [assignShift, setAssignShift] = useState('');
   const [allSchedules, setAllSchedules] = useState([]);
   const [assignStart, setAssignStart] = useState('');
   const [assignEnd, setAssignEnd] = useState('');
