@@ -34,6 +34,91 @@ const WEEKDAY_LINES = [];
 const SATURDAY_LINES = [];
 const SUNDAY_LINES = [];
 
+const ScheduleManagerView = ({ onSchedulesChange }) => {
+  const [schedules, setSchedules] = useState([]);
+  const [name, setName] = useState('');
+  const [category, setCategory] = useState('weekday');
+  const [jsonFile, setJsonFile] = useState(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const fetchSchedules = useCallback(async () => {
+    const res = await authFetch(`${API_URL}/api/schedules`);
+    const data = await res.json();
+    setSchedules(Array.isArray(data) ? data : []);
+    if (onSchedulesChange) onSchedulesChange(Array.isArray(data) ? data : []);
+  }, [onSchedulesChange]);
+
+  useEffect(() => { fetchSchedules(); }, [fetchSchedules]);
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!jsonFile) return setError('Wybierz plik JSON');
+    try {
+      const text = await jsonFile.text();
+      const data = JSON.parse(text);
+      if (!data.linie) return setError('Nieprawidłowy format JSON — brak pola "linie"');
+      const res = await authFetch(`${API_URL}/api/schedules`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, category, data })
+      });
+      if (res.ok) { setSuccess(true); setName(''); setJsonFile(null); fetchSchedules(); setTimeout(() => setSuccess(false), 2000); }
+    } catch { setError('Błąd parsowania JSON — sprawdź format pliku'); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Usunąć ten rozkład?')) return;
+    await authFetch(`${API_URL}/api/schedules/${id}`, { method: 'DELETE' });
+    fetchSchedules();
+  };
+
+  const categoryLabel = (c) => c === 'weekday' ? 'Dni robocze' : c === 'saturday' ? 'Sobotnie' : 'Niedzielne';
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+        <h3 className="text-sm font-medium text-zinc-300 mb-4">Wgraj nowy rozkład (JSON)</h3>
+        {success ? (
+          <div className="p-4 bg-gzm-yellow/10 border border-gzm-yellow/20 text-gzm-yellow rounded-xl text-sm text-center">✅ Rozkład dodany!</div>
+        ) : (
+          <form onSubmit={handleUpload} className="space-y-3">
+            <input required type="text" placeholder="Nazwa rozkładu np. Sobotni 29.06" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none" />
+            <select value={category} onChange={e => setCategory(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none">
+              <option value="weekday">Dni robocze</option>
+              <option value="saturday">Sobotnie</option>
+              <option value="sunday">Niedzielne</option>
+            </select>
+            <div className="relative border-2 border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-950/50 rounded-xl flex items-center justify-center h-16 cursor-pointer">
+              <input type="file" accept=".json" onChange={e => setJsonFile(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer" />
+              <span className="text-sm text-zinc-500">{jsonFile ? jsonFile.name : 'Wybierz plik .json'}</span>
+            </div>
+            {error && <p className="text-xs text-red-400">{error}</p>}
+            <button type="submit" className="px-6 py-2.5 bg-zinc-100 hover:bg-white text-zinc-900 font-medium rounded-xl text-sm">Dodaj rozkład</button>
+          </form>
+        )}
+      </div>
+      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-zinc-800/80"><h3 className="text-sm font-medium text-zinc-300">Wgrane rozkłady</h3></div>
+        {schedules.length === 0 ? <div className="p-8 text-center text-zinc-500 text-sm">Brak wgranych rozkładów.</div> : (
+          <div className="divide-y divide-zinc-800/60">
+            {schedules.map(s => (
+              <div key={s.id} className="px-6 py-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-zinc-200">{s.name}</p>
+                  <p className="text-xs text-zinc-500">{categoryLabel(s.category)} · {s.data.linie?.length ?? 0} linii</p>
+                </div>
+                <button onClick={() => handleDelete(s.id)} className="p-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20"><Trash2 className="w-4 h-4" /></button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const SchedulesView = () => {
   const [subTab, setSubTab] = useState('weekday');
   const openPdf = (filename) => window.open(`/${filename}`, '_blank', 'noopener,noreferrer');
@@ -647,11 +732,11 @@ export default function App() {
   const [newPassword, setNewPassword] = useState('');
   const [changePasswordMsg, setChangePasswordMsg] = useState('');
   const [assignDriverId, setAssignDriverId] = useState('');
-  const [assignCategory, setAssignCategory] = useState('weekday'); // 'weekend' albo 'weekday'
+  const [assignScheduleId, setAssignScheduleId] = useState('');
   const [assignLine, setAssignLine] = useState('');
-  const [assignShift, setAssignShift] = useState('');
-  const [assignScheduleFile, setAssignScheduleFile] = useState('');
-  const [assignNote, setAssignNote] = useState(''); // opcjonalna notatka, zamiast brygady
+  const [assignBrigade, setAssignBrigade] = useState('');
+  const [assignNote, setAssignNote] = useState('');
+  const [allSchedules, setAllSchedules] = useState([]);
   const [assignStart, setAssignStart] = useState('');
   const [assignEnd, setAssignEnd] = useState('');
   const [assignBusId, setAssignBusId] = useState('');
@@ -683,14 +768,15 @@ useEffect(() => {
     fetchShiftHistory(user.id);
     fetchMyProfile();
   }
-  if (user.role === 'admin') {
-    fetchDrivers(); fetchActiveShifts(); fetchFleet();
+if (user.role === 'admin') {
+    fetchDrivers(); fetchActiveShifts(); fetchFleet(); fetchAllSchedules();
     if (adminSubTab === 'reports') fetchReports();
 }
   if (user.role === 'driver' && activeTab === 'fleet') { fetchFleet(); fetchDrivers(); }
 }, [isLoggedIn, user, adminSubTab, activeTab]);
 
   const fetchReports = () => authFetch(`${API_URL}/api/reports/pending`).then(r => r.json()).then(d => setPendingReports(d.reports)).catch(console.error);
+  const fetchAllSchedules = () => authFetch(`${API_URL}/api/schedules`).then(r => r.json()).then(d => setAllSchedules(Array.isArray(d) ? d : [])).catch(console.error);
   const fetchDrivers = () => authFetch(`${API_URL}/api/drivers`).then(r => r.json()).then(d => setDriversList(Array.isArray(d) ? d : [])).catch(console.error);
   const fetchActiveShifts = () => authFetch(`${API_URL}/api/shifts`).then(r => r.json()).then(d => setActiveShifts(d.shifts || [])).catch(console.error);
   const fetchFleet = () => authFetch(`${API_URL}/api/fleet`).then(r => r.json()).then(d => setFleet(Array.isArray(d) ? d : [])).catch(console.error);
@@ -777,31 +863,33 @@ const handleSaveDriver = async (e) => {
 
 const handleAssignShift = async (e) => {
     e.preventDefault();
-    if (!assignDriverId || !assignLine || !assignBusId) { alert("Wybierz kierowcę, linię i pojazd!"); return; }
+    if (!assignDriverId || !assignLine || !assignBusId || !assignBrigade) { alert("Wypełnij wszystkie wymagane pola!"); return; }
     const selectedDriver = driversList.find(d => d.id === assignDriverId);
     const selectedVehicle = fleet.find(v => v.id === assignBusId);
+    const selectedSchedule = allSchedules.find(s => String(s.id) === String(assignScheduleId));
+    const selectedLineData = selectedSchedule?.data?.linie?.find(l => l.linia === assignLine);
+    const selectedBrigadeData = selectedLineData?.brygady?.find(b => b.brygada === assignBrigade);
     const busLabel = selectedVehicle ? `${selectedVehicle.brand || ''} ${selectedVehicle.model || ''} (#${selectedVehicle.busNumber})`.trim() : '';
     try {
       const response = await authFetch(`${API_URL}/api/shifts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-  driverId: selectedDriver.id,
-  driverName: selectedDriver.displayName,
-  line: assignLine,
-  brigade: assignNote,
-  shift: assignShift,
-  bus: busLabel,
-  startTime: assignStart,
-  endTime: assignEnd,
-  scheduleFile: assignScheduleFile
-})
+          driverId: selectedDriver.id,
+          driverName: selectedDriver.displayName,
+          line: assignLine,
+          brigade: assignBrigade,
+          bus: busLabel,
+          startTime: selectedBrigadeData?.start || '',
+          endTime: selectedBrigadeData?.end || '',
+          scheduleFile: selectedBrigadeData?.pdfUrl ? selectedBrigadeData.pdfUrl.replace(/^\//, '') : ''
+        })
       });
       if (response.ok) {
         setAssignSuccess(true); fetchActiveShifts();
         setTimeout(() => {
-          setAssignSuccess(false); setAssignDriverId(''); setAssignLine(''); setAssignNote('');
-          setAssignBusId(''); setAssignStart(''); setAssignEnd(''); setAssignScheduleFile(''); setAssignCategory('weekend'); setAssignShift('');
+          setAssignSuccess(false); setAssignDriverId(''); setAssignScheduleId('');
+          setAssignLine(''); setAssignBrigade(''); setAssignBusId(''); setAssignNote('');
         }, 3000);
       } else { alert('Błąd podczas wystawiania służby.'); }
     } catch (err) { console.error(err); }
@@ -1089,52 +1177,41 @@ const handleAssignShift = async (e) => {
           {/* Separator */}
           <div className="h-px bg-zinc-800/50 my-1" />
 
-          {/* Kategoria + Linia — dwa w rzędzie */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Kategoria</label>
-              <select
-                value={assignCategory}
-                onChange={(e) => { setAssignCategory(e.target.value); setAssignLine(''); setAssignScheduleFile(''); }}
-                className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/40 transition-colors appearance-none"
-              >
-                <option value="weekday">Dni robocze</option>
-                <option value="saturday">Sobotnie</option>
-                <option value="sunday">Niedzielne</option>
-              </select>
-            </div>
+        {/* Rozkład */}
+<div className="flex flex-col gap-1.5">
+  <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Rozkład</label>
+  <select required value={assignScheduleId} onChange={e => { setAssignScheduleId(e.target.value); setAssignLine(''); setAssignBrigade(''); }}
+    className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/40 appearance-none">
+    <option value="">Wybierz rozkład…</option>
+    {allSchedules.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+  </select>
+</div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Linia</label>
-              {(assignCategory === 'weekday' ? WEEKDAY_LINES : assignCategory === 'saturday' ? SATURDAY_LINES : SUNDAY_LINES).length > 0 ? (
-                <select
-                  required
-                  value={assignLine}
-                  onChange={(e) => {
-                    const lines = assignCategory === 'weekday' ? WEEKDAY_LINES : assignCategory === 'saturday' ? SATURDAY_LINES : SUNDAY_LINES;
-                    const selected = lines.find(l => l.label === e.target.value);
-                    setAssignLine(e.target.value);
-                    setAssignScheduleFile(selected ? selected.file : '');
-                  }}
-                  className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/40 transition-colors appearance-none"
-                >
-                  <option value="">Wybierz linię…</option>
-                  {(assignCategory === 'weekday' ? WEEKDAY_LINES : assignCategory === 'saturday' ? SATURDAY_LINES : SUNDAY_LINES).map(l => (
-                    <option key={l.file} value={l.label}>{l.label}</option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  required
-                  type="text"
-                  placeholder="Wpisz nr linii…"
-                  value={assignLine}
-                  onChange={(e) => setAssignLine(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/40 transition-colors"
-                />
-              )}
-            </div>
-          </div>
+{/* Linia + Brygada */}
+{assignScheduleId && (
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Linia</label>
+      <select required value={assignLine} onChange={e => { setAssignLine(e.target.value); setAssignBrigade(''); }}
+        className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/40 appearance-none">
+        <option value="">Wybierz linię…</option>
+        {allSchedules.find(s => String(s.id) === String(assignScheduleId))?.data?.linie?.map(l => (
+          <option key={l.linia} value={l.linia}>Linia {l.linia}</option>
+        ))}
+      </select>
+    </div>
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Brygada</label>
+      <select required value={assignBrigade} onChange={e => setAssignBrigade(e.target.value)}
+        className="w-full px-4 py-3 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl text-zinc-200 text-sm focus:outline-none focus:border-gzm-yellow/40 appearance-none">
+        <option value="">Wybierz brygadę…</option>
+        {allSchedules.find(s => String(s.id) === String(assignScheduleId))?.data?.linie?.find(l => l.linia === assignLine)?.brygady?.map(b => (
+          <option key={b.brygada} value={b.brygada}>Brygada {b.brygada} ({b.start}–{b.end})</option>
+        ))}
+      </select>
+    </div>
+  </div>
+)}
 
           {/* Pojazd + Zmiana — dwa w rzędzie */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1279,7 +1356,12 @@ const handleAssignShift = async (e) => {
               )}
 
               {adminSubTab === 'fleet' && <FleetView isAdmin={true} fleet={fleet} driversList={driversList} onRefresh={fetchFleet} />}
-              {adminSubTab === 'schedules' && <SchedulesView />}
+              {adminSubTab === 'schedules' && (
+  <div className="space-y-4">
+    <ScheduleManagerView onSchedulesChange={setAllSchedules} />
+    <SchedulesView />
+  </div>
+)}
               {adminSubTab === 'messages' && <MessagesView user={user} driversList={driversList} onUnreadCountChange={() => {}} />}
             </div>
           )}
