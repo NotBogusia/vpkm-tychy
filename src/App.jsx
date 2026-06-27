@@ -767,6 +767,10 @@ export default function App() {
   const [newDriverSuccess, setNewDriverSuccess] = useState(false);
   const [fleet, setFleet] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [myReports, setMyReports] = useState([]);
+  const [allReports, setAllReports] = useState([]);
+  const [allReportsFilter, setAllReportsFilter] = useState('all');
+  const [allReportsDriverFilter, setAllReportsDriverFilter] = useState('all');
 
   useEffect(() => {
     if (!isLoggedIn || !user) return;
@@ -784,6 +788,7 @@ useEffect(() => {
     authFetch(`${API_URL}/api/shifts/${user.id}`).then(r => r.json()).then(d => setMyShift(d.shift || null)).catch(console.error);
     fetchShiftHistory(user.id);
     fetchMyProfile();
+    fetchMyReports();
   }
 if (user.role === 'admin') {
     fetchDrivers(); fetchActiveShifts(); fetchFleet(); fetchAllSchedules();
@@ -824,6 +829,20 @@ if (user.role === 'admin') {
     setIsUploaded(false); setEmail(''); setPassword(''); setMyShift(null);
     setShiftHistory([]); setShowChangePassword(false); setUnreadCount(0);
   };
+
+  const fetchMyReports = () => {
+  authFetch(`${API_URL}/api/reports/my`)
+    .then(res => res.json())
+    .then(data => setMyReports(data.reports || []))
+    .catch(err => console.error(err));
+};
+
+const fetchAllReports = (status = 'all', driverId = 'all') => {
+  authFetch(`${API_URL}/api/reports/all?status=${status}&driverId=${driverId}`)
+    .then(res => res.json())
+    .then(data => setAllReports(data.reports || []))
+    .catch(err => console.error(err));
+};
 
   const submitDriverReport = async () => {
     if (!driverReportFile) return;
@@ -987,6 +1006,13 @@ const handleAssignShift = async (e) => {
                 <button onClick={() => { setActiveTab('report'); setShowChangePassword(false); }} className={`p-2.5 rounded-xl transition-all duration-200 active:scale-90 ${activeTab === 'report' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Złóż raport"><FileText className="h-5 w-5" /></button>
                 <button onClick={() => { setActiveTab('fleet'); setShowChangePassword(false); fetchFleet(); fetchDrivers(); }} className={`p-2.5 rounded-xl transition-all duration-200 active:scale-90 ${activeTab === 'fleet' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Tabor"><Truck className="h-5 w-5" /></button>
                 <button onClick={() => { setActiveTab('schedules'); setShowChangePassword(false); }} className={`p-2.5 rounded-xl transition-all duration-200 active:scale-90 ${activeTab === 'schedules' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`} title="Rozkłady jazdy"><BookOpen className="h-5 w-5" /></button>
+                <button
+  onClick={() => { setActiveTab('myreports'); setShowChangePassword(false); }}
+  className={`p-2.5 rounded-xl transition-all duration-200 active:scale-90 ${activeTab === 'myreports' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+  title="Moje raporty"
+>
+  <FileCheck className="h-5 w-5" />
+</button>
                <button onClick={() => { setActiveTab('messages'); setShowChangePassword(false); setUnreadCount(0); }} className={`relative p-2.5 rounded-xl transition-all duration-200 active:scale-90 ${activeTab === 'messages' && !showChangePassword ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40'}`} title="Komunikaty">
   {unreadCount > 0 ? <BellRing className="h-5 w-5 text-gzm-yellow animate-ring" /> : <Bell className="h-5 w-5" />}
   {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-gzm-yellow text-zinc-950 text-[10px] font-bold rounded-full flex items-center justify-center animate-pop-in">{unreadCount > 9 ? '9+' : unreadCount}</span>}
@@ -1100,6 +1126,63 @@ const handleAssignShift = async (e) => {
             </div>
           )}
 
+          {user.role === 'driver' && !showChangePassword && activeTab === 'myreports' && (
+  <div className="animate-in fade-in duration-500">
+    <h2 className="text-xl font-medium mb-4 text-zinc-200">Moje raporty</h2>
+    <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
+      {myReports.length === 0 ? (
+        <div className="p-10 text-center text-zinc-500 text-sm">
+          Nie złożyłeś jeszcze żadnych raportów.
+        </div>
+      ) : (
+        <div className="divide-y divide-zinc-800/60">
+          <div className="hidden md:grid grid-cols-12 px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">
+            <div className="col-span-2">Linia</div>
+            <div className="col-span-4">Data</div>
+            <div className="col-span-3">Plik</div>
+            <div className="col-span-3 text-right">Status</div>
+          </div>
+          {myReports.map(report => (
+            <div key={report.id} className="px-6 py-4 flex items-center justify-between hover:bg-zinc-800/20 transition-colors">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="w-10 h-10 bg-zinc-800 rounded-xl flex items-center justify-center font-bold text-sm text-zinc-200">
+                  {report.line}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-zinc-200">{report.originalName || 'Raport'}</p>
+                  <p className="text-xs text-zinc-500">{report.date}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {report.pdfUrl && (
+                  <button
+                    onClick={() => downloadProtectedFile(report.pdfUrl.startsWith('http') ? report.pdfUrl : `${API_URL}${report.pdfUrl}`)}
+                    className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-zinc-200 transition-colors"
+                    title="Pobierz raport"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                )}
+                <span className={`px-2 py-1 rounded-md text-xs font-medium border ${
+                  report.status === 'approved'
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    : report.status === 'rejected'
+                    ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                    : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                }`}>
+                  {report.status === 'approved' ? '✅ Zatwierdzony'
+                    : report.status === 'rejected' ? '❌ Odrzucony'
+                    : '⏳ Oczekuje'}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
           {user.role === 'driver' && !showChangePassword && activeTab === 'fleet' && <FleetView isAdmin={false} fleet={fleet} driversList={driversList} onRefresh={fetchFleet} />}
           {user.role === 'driver' && !showChangePassword && activeTab === 'schedules' && <SchedulesView />}
           {user.role === 'driver' && !showChangePassword && activeTab === 'messages' && <MessagesView user={user} driversList={driversList} onUnreadCountChange={setUnreadCount} />}
@@ -1109,6 +1192,12 @@ const handleAssignShift = async (e) => {
               <div className="flex gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-fit overflow-x-auto">
                 <button onClick={() => setAdminSubTab('assign')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'assign' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Plus className="w-4 h-4" /> Wystaw Służbę</button>
                 <button onClick={() => setAdminSubTab('reports')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'reports' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><FileCheck className="w-4 h-4" /> Raporty</button>
+                <button
+  onClick={() => { setAdminSubTab('allreports'); fetchAllReports(); fetchDrivers(); }}
+  className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'allreports' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+>
+  <FileText className="w-4 h-4" /> Historia raportów
+</button>
                 <button onClick={() => setAdminSubTab('crew')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'crew' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Users className="w-4 h-4" />Kierowcy</button>
                 <button onClick={() => { setAdminSubTab('fleet'); fetchFleet(); fetchDrivers(); }} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'fleet' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><Truck className="w-4 h-4" /> Tabor</button>
                 <button onClick={() => setAdminSubTab('schedules')} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'schedules' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}><BookOpen className="w-4 h-4" /> Rozkłady</button>
@@ -1399,6 +1488,99 @@ const handleAssignShift = async (e) => {
                   )}
                 </div>
               )}
+
+              {adminSubTab === 'allreports' && (
+  <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
+    <div className="p-6 border-b border-zinc-800/80">
+      <h2 className="text-xl font-medium text-zinc-200 mb-4">Historia raportów</h2>
+      <div className="flex gap-3 flex-wrap">
+        <select
+          value={allReportsFilter}
+          onChange={(e) => {
+            setAllReportsFilter(e.target.value);
+            fetchAllReports(e.target.value, allReportsDriverFilter);
+          }}
+          className="px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none"
+        >
+          <option value="all">Wszystkie statusy</option>
+          <option value="pending">Oczekujące</option>
+          <option value="approved">Zatwierdzone</option>
+          <option value="rejected">Odrzucone</option>
+        </select>
+        <select
+          value={allReportsDriverFilter}
+          onChange={(e) => {
+            setAllReportsDriverFilter(e.target.value);
+            fetchAllReports(allReportsFilter, e.target.value);
+          }}
+          className="px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 text-sm focus:outline-none"
+        >
+          <option value="all">Wszyscy kierowcy</option>
+          {driversList.map(d => (
+            <option key={d.id} value={d.id}>{d.displayName}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+    {allReports.length === 0 ? (
+      <div className="p-10 text-center text-zinc-500 text-sm">Brak raportów spełniających kryteria.</div>
+    ) : (
+      <div className="divide-y divide-zinc-800/60">
+        {allReports.map(report => (
+          <div key={report.id} className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-zinc-800/20 transition-colors">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-zinc-800 text-zinc-100 rounded-xl flex items-center justify-center font-bold text-lg">
+                {report.line}
+              </div>
+              <div>
+                <p className="font-medium text-zinc-200">{report.driverName}</p>
+                <p className="text-xs text-zinc-500">{report.date}</p>
+                <p className="text-xs text-zinc-600">{report.originalName}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {report.pdfUrl && (
+                <button
+                  onClick={() => downloadProtectedFile(report.pdfUrl.startsWith('http') ? report.pdfUrl : `${API_URL}${report.pdfUrl}`)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-zinc-300"
+                >
+                  <FileText className="w-4 h-4 text-emerald-400" /> Pobierz PDF
+                </button>
+              )}
+              <span className={`px-2 py-1 rounded-md text-xs font-medium border ${
+                report.status === 'approved'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  : report.status === 'rejected'
+                  ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                  : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+              }`}>
+                {report.status === 'approved' ? '✅ Zatwierdzony'
+                  : report.status === 'rejected' ? '❌ Odrzucony'
+                  : '⏳ Oczekuje'}
+              </span>
+              {report.status === 'pending' && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { handleReportAction(report.id, 'approve'); fetchAllReports(allReportsFilter, allReportsDriverFilter); }}
+                    className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20"
+                  >
+                    <CheckCircle className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => { handleReportAction(report.id, 'reject'); fetchAllReports(allReportsFilter, allReportsDriverFilter); }}
+                    className="p-2.5 bg-red-500/10 text-red-400 rounded-xl border border-red-500/20"
+                  >
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
 
               {adminSubTab === 'fleet' && <FleetView isAdmin={true} fleet={fleet} driversList={driversList} onRefresh={fetchFleet} />}
               {adminSubTab === 'schedules' && (
