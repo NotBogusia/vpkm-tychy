@@ -6,7 +6,7 @@ import {
   Bell, BellRing, Send, Trash2, MessageSquare, BookOpen, ExternalLink, Calendar, Image
 } from 'lucide-react';
 
-const API_URL = 'https://vpkm-backend-production.up.railway.app';
+const API_URL = 'https://api.vpkmtychy.pl';
 
 const authFetch = (url, options = {}) => {
   const token = localStorage.getItem('vpkm_token');
