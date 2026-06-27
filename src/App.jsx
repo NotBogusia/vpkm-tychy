@@ -26,14 +26,27 @@ const authFetch = (url, options = {}) => {
 };
 
 const downloadProtectedFile = async (url) => {
+  // Jeśli to link Cloudinary — otwórz bezpośrednio bez tokenu
+  if (url.startsWith('https://res.cloudinary.com')) {
+    window.open(url, '_blank');
+    return;
+  }
+  // Stare pliki lokalne — pobierz przez authFetch z tokenem
   try {
-    const res = await authFetch(url);
-    if (!res.ok) { alert('Nie udało się pobrać pliku.'); return; }
+    const fullUrl = url.startsWith('http') ? url : `${API_URL}${url}`;
+    const res = await authFetch(fullUrl);
+    if (!res.ok) {
+      alert('Nie udało się pobrać pliku.');
+      return;
+    }
     const blob = await res.blob();
     const blobUrl = window.URL.createObjectURL(blob);
     window.open(blobUrl, '_blank');
     setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
-  } catch (err) { console.error(err); alert('Błąd podczas pobierania pliku.'); }
+  } catch (err) {
+    console.error(err);
+    alert('Błąd podczas pobierania pliku.');
+  }
 };
 
 // ---------------------------------------------------------
