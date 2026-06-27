@@ -1169,7 +1169,7 @@ const handleAssignShift = async (e) => {
               <div className="flex items-center gap-3">
                 {report.pdfUrl && (
                   <button
-                    onClick={() => downloadProtectedFile(report.pdfUrl.startsWith('http') ? report.pdfUrl : `${API_URL}${report.pdfUrl}`)}
+                    onClick={() => downloadProtectedFile(report.pdfUrl)}
                     className="p-2 bg-zinc-800 text-zinc-400 rounded-xl hover:text-zinc-200 transition-colors"
                     title="Pobierz raport"
                   >
@@ -1554,7 +1554,7 @@ const handleAssignShift = async (e) => {
             <div className="flex items-center gap-3">
               {report.pdfUrl && (
                 <button
-                  onClick={() => downloadProtectedFile(report.pdfUrl.startsWith('http') ? report.pdfUrl : `${API_URL}${report.pdfUrl}`)}
+                  onClick={() => downloadProtectedFile(report.pdfUrl)}
                   className="flex items-center gap-2 px-4 py-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-zinc-300"
                 >
                   <FileText className="w-4 h-4 text-emerald-400" /> Pobierz PDF
