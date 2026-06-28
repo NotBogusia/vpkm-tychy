@@ -515,8 +515,7 @@ style={{ maxWidth: '120px' }}
                       <div className="px-6 pb-5 bg-zinc-950/30">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-800/60">
                           <div><p className="text-xs text-zinc-500 mb-1">Nr taborowy</p><p className="text-sm text-zinc-200 font-mono font-bold">{vehicle.busNumber}</p></div>
-                          <div><p className="text-xs text-zinc-500 mb-1">Marka</p><p className="text-sm text-zinc-200">{vehicle.brand || '—'}</p></div>
-                          <div><p className="text-xs text-zinc-500 mb-1">Typ / Model</p><p className="text-sm text-zinc-200">{vehicle.model || '—'}</p></div>
+                          <div><p className="text-xs text-zinc-500 mb-1">Marka i typ</p><p className="text-sm text-zinc-200">{vehicle.brand || '—'}</p></div>
                           <div>
                             <p className="text-xs text-zinc-500 mb-1">Rodzaj pojazdu</p>
                             <div className="flex items-center gap-2">
