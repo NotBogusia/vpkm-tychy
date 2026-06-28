@@ -304,7 +304,9 @@ const FleetForm = ({ values, onChange, driversList, onSubmit, onCancel, submitLa
           {(plateImagePreview || values.plateImageUrl) && (
             <div className="flex-shrink-0">
               <img
-                src={plateImagePreview || (values.plateImageUrl ? `${API_URL}${values.plateImageUrl}` : '')}
+               src={plateImagePreview || (values.plateImageUrl 
+  ? (values.plateImageUrl.startsWith('http') ? values.plateImageUrl : `${API_URL}${values.plateImageUrl}`)
+  : '')}
                 alt="Tablica rejestracyjna"
                 className="h-20 rounded-xl border border-zinc-700 object-cover"
                 style={{ maxWidth: '200px' }}
@@ -481,7 +483,7 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
                         <div className="hidden md:block">
                           {vehicle.plateImageUrl ? (
                         <img
-  src={`${API_URL}${vehicle.plateImageUrl}`}
+  src={vehicle.plateImageUrl.startsWith('http') ? vehicle.plateImageUrl : `${API_URL}${vehicle.plateImageUrl}`}
   alt="Tablica"
   className="h-8 rounded-md object-cover border border-zinc-700"
   style={{ maxWidth: '90px' }}
@@ -535,7 +537,7 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
                             <div className="col-span-2 md:col-span-4">
                               <p className="text-xs text-zinc-500 mb-2">Tablica rejestracyjna</p>
                               <img
-                                src={`${API_URL}${vehicle.plateImageUrl}`}
+                                src={vehicle.plateImageUrl.startsWith('http') ? vehicle.plateImageUrl : `${API_URL}${vehicle.plateImageUrl}`}
                                 alt="Tablica rejestracyjna"
                                 className="rounded-xl border border-zinc-700 object-cover cursor-pointer hover:border-zinc-500 transition-colors"
                                 style={{ maxHeight: '80px', maxWidth: '300px' }}
