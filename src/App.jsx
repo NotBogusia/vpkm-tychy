@@ -485,8 +485,8 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
                         <img
   src={vehicle.plateImageUrl.startsWith('http') ? vehicle.plateImageUrl : `${API_URL}${vehicle.plateImageUrl}`}
   alt="Tablica"
-  className="h-8 rounded-md object-cover border border-zinc-700"
-  style={{ maxWidth: '90px' }}
+  className="h-7 rounded-md object-contain border border-zinc-700 bg-white"
+style={{ maxWidth: '120px' }}
 />
                           ) : (
                             <span className="text-xs text-zinc-600">—</span>
