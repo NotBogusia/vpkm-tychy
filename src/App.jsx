@@ -436,7 +436,7 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
         ) : (
           <div className="divide-y divide-zinc-800/60">
             {/* Nagłówek tabeli — bez kolumny "Tablica" z tekstem */}
-            <div className="hidden md:grid px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider" style={{gridTemplateColumns: '60px 1fr 60px 90px 130px 1fr'}}>
+            <div className="hidden md:grid px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider" style={{gridTemplateColumns: '60px 1fr 60px 130px 150px 140px'}}>
               <div>Nr tab.</div>
               <div>Marka / Model</div>
               <div>Typ</div>
@@ -467,7 +467,7 @@ const FleetView = ({ isAdmin, fleet, driversList, onRefresh }) => {
                       className="px-6 py-4 hover:bg-zinc-800/20 transition-colors cursor-pointer"
                       onClick={() => setExpandedId(expandedId === vehicle.id ? null : vehicle.id)}
                     >
-                      <div className="grid items-center gap-3" style={{gridTemplateColumns: '60px 1fr 60px 90px 130px 1fr'}}>
+                      <div className="grid items-center gap-3" style={{gridTemplateColumns: '60px 1fr 60px 130px 150px 140px'}}>
                         {/* Nr tab */}
                         <span className="inline-flex items-center justify-center w-12 h-10 bg-zinc-950 border border-zinc-800 rounded-xl text-gzm-yellow font-bold text-sm font-mono">{vehicle.busNumber}</span>
 
